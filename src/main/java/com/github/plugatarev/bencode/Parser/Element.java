@@ -5,10 +5,10 @@ import java.util.Map;
 
 public sealed interface Element {
 
-    record JInteger(String value) implements Element {
+    record JInteger(int value) implements Element {
         @Override
         public String toString() {
-            return value;
+            return String.valueOf(value);
         }
     }
 
