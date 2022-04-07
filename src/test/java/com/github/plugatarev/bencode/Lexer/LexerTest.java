@@ -33,6 +33,21 @@ public class LexerTest {
     }
 
     @Test
+    public void correctBencodeData(){
+        assertTypes(scan("d3:cow3:moo3:keye"),
+                TokenType.DICTIONARY,
+                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.END_TYPE, TokenType.EOL, TokenType.EOF
+                );
+    }
+
+    public void incorrectSymbolInBencodeData(){
+        Assert.assertNull(scan("d3@:cow3:moo3:keye"));
+    }
+
+    @Test
     public void eol() {
         assertTypes(scan("\n\n"), TokenType.EOL, TokenType.EOL, TokenType.EOF);
     }
