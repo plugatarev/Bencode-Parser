@@ -3,7 +3,6 @@ package com.github.plugatarev.bencode.Parser;
 import com.github.plugatarev.bencode.Error.ErrorReporter;
 import com.github.plugatarev.bencode.Lexer.Token;
 import com.github.plugatarev.bencode.Lexer.TokenType;
-
 import java.util.*;
 
 public class Parser {
@@ -92,7 +91,7 @@ public class Parser {
         }
         pos++;
         consume(TokenType.END_TYPE);
-        return new Element.JInteger(token.value().toString());
+        return new Element.JInteger((Integer) token.value());
     }
     private boolean matches(TokenType first, TokenType... rest) {
         Token token = tokens.get(pos);
