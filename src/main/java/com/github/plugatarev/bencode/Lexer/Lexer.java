@@ -100,18 +100,7 @@ public class Lexer {
             sb.append(line.charAt(i));
             i++;
         } while (i != line.length() && Character.isDigit(line.charAt(i)));
-        String value = sb.toString();
-        tokens.add(new Token(type, nLine, start, value));
-        return i;
-    }
-
-    private int list(int i, String line, int nLine, int pos){
-        tokens.add(new Token(TokenType.LIST, nLine, pos, "l"));
-        return i;
-    }
-
-    private int dictionary(int i, String line, int pos, int nLine){
-        tokens.add(new Token(TokenType.DICTIONARY, nLine, pos, "d"));
+        tokens.add(new Token(type, nLine, start, Integer.parseInt(sb.toString())));
         return i;
     }
 
