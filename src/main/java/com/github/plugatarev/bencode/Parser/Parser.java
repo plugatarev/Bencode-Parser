@@ -58,7 +58,7 @@ public class Parser {
             values.add(parseElement(nestingLevel));
         }
         pos++;
-        return new Element.MyArray(values);
+        return new Element.JArray(values);
     }
 
     private Element parseDictionary(int nestingLevel) {
@@ -71,7 +71,7 @@ public class Parser {
             dict.put(key, value);
         }
         pos++;
-        return new Element.MyDictionary(dict, nestingLevel);
+        return new Element.JDictionary(dict, nestingLevel);
     }
 
     private Element parseLengthAndString() {
@@ -82,7 +82,7 @@ public class Parser {
             throw new ParserException(unexpectedToken(str, TokenType.STRING));
         }
         pos++;
-        return new Element.MyString((String) str.value());
+        return new Element.JString((String) str.value());
     }
 
     private Element parseInteger() {
@@ -92,7 +92,7 @@ public class Parser {
         }
         pos++;
         consume(TokenType.END_TYPE);
-        return new Element.MyInteger(token.value().toString());
+        return new Element.JInteger(token.value().toString());
     }
     private boolean matches(TokenType first, TokenType... rest) {
         Token token = tokens.get(pos);

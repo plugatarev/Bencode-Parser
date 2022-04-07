@@ -5,21 +5,21 @@ import java.util.Map;
 
 public sealed interface Element {
 
-    record MyInteger(String value) implements Element {
+    record JInteger(String value) implements Element {
         @Override
         public String toString() {
             return value;
         }
     }
 
-    record MyArray(List<Element> member) implements Element{
+    record JArray(List<Element> member) implements Element{
         @Override
         public String toString(){
             return member.toString();
         }
     }
 
-    record MyDictionary(Map<Element, Element> dict, int nestingLevel) implements Element{
+    record JDictionary(Map<Element, Element> dict, int nestingLevel) implements Element{
         @Override
         public String toString(){
             StringBuilder str = new StringBuilder("\n%s{\n".formatted("\t".repeat(nestingLevel - 1)));
@@ -32,7 +32,7 @@ public sealed interface Element {
         }
     }
 
-    record MyString(String str) implements  Element{
+    record JString(String str) implements  Element{
         @Override
         public String toString(){
             return "\"" + str + "\"";
