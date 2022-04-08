@@ -54,6 +54,11 @@ public class Parser {
         List<Element> values = new ArrayList<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
+            if (matches(TokenType.EOL)){
+                pos++;
+                continue;
+            }
+            if (matches(TokenType.EOF)) throw new ParserException(unexpectedToken(tokens.get(pos), TokenType.END_TYPE));
             values.add(parseElement(nestingLevel));
         }
         pos++;
@@ -64,6 +69,11 @@ public class Parser {
         Map<Element, Element> dict = new HashMap<>();
         pos++;
         while (!matches(TokenType.END_TYPE)){
+            if (matches(TokenType.EOL)){
+                pos++;
+                continue;
+            }
+            if (matches(TokenType.EOF)) throw new ParserException(unexpectedToken(tokens.get(pos), TokenType.END_TYPE));
             Element key = parseLengthAndString();
             Element value = parseElement(nestingLevel);
             if (value == null) throw new IllegalArgumentException();
