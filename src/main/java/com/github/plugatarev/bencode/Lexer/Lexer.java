@@ -40,7 +40,7 @@ public class Lexer {
                 }
                 if (isDigit(c)){
                     int start = i;
-                    i = number(i, line, start, type);
+                    i = number(i, line, start, TokenType.LENGTH);
                     last_number = Integer.parseInt(line.substring(start, i));
                     continue;
                 }
@@ -74,7 +74,6 @@ public class Lexer {
     }
 
     private TokenType getTokenType(char c){
-        if (isDigit(c)) return TokenType.LENGTH;
         if (!tokens.isEmpty() && tokens.get(tokens.size() - 1).tokenType() == TokenType.SEPARATOR) return null;
         return switch (c){
             case ':' -> TokenType.SEPARATOR;
