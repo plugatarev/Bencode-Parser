@@ -1,4 +1,4 @@
-package com.github.plugatarev.bencode.Error;
+package com.github.plugatarev.bencode.error;
 public interface ErrorReporter {
     ErrorReporter EMPTY = message -> true;
 

@@ -1,14 +1,13 @@
 package com.github.plugatarev.bencode;
 
-import com.github.plugatarev.bencode.Lexer.Lexer;
-import com.github.plugatarev.bencode.Lexer.Token;
-import com.github.plugatarev.bencode.Error.ConsoleReporter;
-import com.github.plugatarev.bencode.Error.ErrorReporter;
-import com.github.plugatarev.bencode.Parser.Element;
-import com.github.plugatarev.bencode.Parser.Parser;
+import com.github.plugatarev.bencode.lexer.Lexer;
+import com.github.plugatarev.bencode.lexer.Token;
+import com.github.plugatarev.bencode.error.ConsoleReporter;
+import com.github.plugatarev.bencode.error.ErrorReporter;
+import com.github.plugatarev.bencode.parser.Element;
+import com.github.plugatarev.bencode.parser.Parser;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
@@ -22,6 +21,7 @@ public class Main {
 
         List<Token> tokens = Lexer.scan(br, reporter);
         List<Element> jsonTokens = Parser.parse(tokens, new ConsoleReporter());
+        // CR: use json converter
         System.out.println(jsonTokens);
     }
 }

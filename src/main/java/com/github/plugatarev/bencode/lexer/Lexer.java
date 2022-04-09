@@ -1,5 +1,5 @@
-package com.github.plugatarev.bencode.Lexer;
-import com.github.plugatarev.bencode.Error.ErrorReporter;
+package com.github.plugatarev.bencode.lexer;
+import com.github.plugatarev.bencode.error.ErrorReporter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -22,10 +22,10 @@ public class Lexer {
         return lexer.scan();
     }
 
-    public List<Token> scan() {
+    private List<Token> scan() {
         String line;
         boolean hasErrors = false;
-        int last_number = -1;
+        int lastNumber = -1;
         while ((line = getLine()) != null) {
             nLine++;
             int i = 0;
@@ -40,12 +40,13 @@ public class Lexer {
                 }
                 if (isDigit(c)){
                     int start = i;
-                    i = number(i, line, start, TokenType.LENGTH);
-                    last_number = Integer.parseInt(line.substring(start, i));
+                    i = number(i, line, start, TokenType.STRING_BEGIN);
+                    // CR: double work
+                    lastNumber = Integer.parseInt(line.substring(start, i));
                     continue;
                 }
                 if (Character.isAlphabetic(c) && type == null) {
-                    i = string(i, line, last_number, nLine);
+                    i = string(i, line, lastNumber, nLine);
                     continue;
                 }
                 if (type == null) {
@@ -94,16 +95,17 @@ public class Lexer {
     }
 
     private int number(int i, String line, int start, TokenType type) {
-        StringBuilder sb = new StringBuilder();
         do {
-            sb.append(line.charAt(i));
             i++;
-        } while (i != line.length() && Character.isDigit(line.charAt(i)));
-        tokens.add(new Token(type, nLine, start, Integer.parseInt(sb.toString())));
+        } while (i < line.length() && Character.isDigit(line.charAt(i)));
+        // CR: 121212312421423423423523564325243
+        tokens.add(new Token(type, nLine, start, Integer.parseInt(line.substring(start, i))));
         return i;
     }
 
     private int string(int i, String line, int length, int nLine){
+        // CR: support 1:$ + test 1:✨ ??
+        // CR: substring
         int j = 1;
         StringBuilder sb = new StringBuilder();
         do {

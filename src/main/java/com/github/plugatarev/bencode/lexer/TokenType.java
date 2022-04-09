@@ -1,10 +1,10 @@
-package com.github.plugatarev.bencode.Lexer;
+package com.github.plugatarev.bencode.lexer;
 
 public enum TokenType {
     LIST,
     DICTIONARY,
     STRING,
-    LENGTH,
+    STRING_BEGIN,
     INTEGER_BEGIN,
     INTEGER,
     END_TYPE,

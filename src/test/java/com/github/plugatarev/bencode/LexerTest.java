@@ -1,6 +1,9 @@
-package com.github.plugatarev.bencode.Lexer;
+package com.github.plugatarev.bencode;
 
-import com.github.plugatarev.bencode.Error.ErrorReporter;
+import com.github.plugatarev.bencode.error.ErrorReporter;
+import com.github.plugatarev.bencode.lexer.Lexer;
+import com.github.plugatarev.bencode.lexer.Token;
+import com.github.plugatarev.bencode.lexer.TokenType;
 import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.junit.Test;
@@ -36,9 +39,9 @@ public class LexerTest {
     public void correctBencodeData(){
         assertTypes(scan("d3:cow3:moo3:keye"),
                 TokenType.DICTIONARY,
-                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
-                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
-                TokenType.LENGTH,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
+                TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
                 TokenType.END_TYPE, TokenType.EOL, TokenType.EOF
                 );
     }

@@ -1,8 +1,8 @@
-package com.github.plugatarev.bencode.Parser;
+package com.github.plugatarev.bencode.parser;
 
-import com.github.plugatarev.bencode.Error.ErrorReporter;
-import com.github.plugatarev.bencode.Lexer.Token;
-import com.github.plugatarev.bencode.Lexer.TokenType;
+import com.github.plugatarev.bencode.error.ErrorReporter;
+import com.github.plugatarev.bencode.lexer.Token;
+import com.github.plugatarev.bencode.lexer.TokenType;
 import java.util.*;
 
 public class Parser {
@@ -25,7 +25,12 @@ public class Parser {
         List<Element> members = new ArrayList<>();
         while (!matches(TokenType.EOF)) {
             try {
-                Element expr = parseElement(0);
+                // CR: only one root element, check that file has ended
+                Element expr = null;
+                if (tokens.get(pos).tokenType() != TokenType.EOL) {
+                    expr = parseElement(0);
+                }
+                consume(TokenType.EOL);
                 if (expr == null) continue;
                 members.add(expr);
             } catch (ParserException e) {
@@ -45,8 +50,11 @@ public class Parser {
             case DICTIONARY -> parseDictionary(nestingLevel + 1);
             case LIST -> parseList(nestingLevel);
             case INTEGER_BEGIN -> parseInteger();
-            case LENGTH -> parseLengthAndString();
-            default -> null;
+            case STRING_BEGIN -> parseString();
+            default -> {
+                String error = "Expected one of token types: " + Arrays.toString(TokenType.values()) + ", got " + type;
+                throw new IllegalStateException(error);
+            }
         };
     }
 
@@ -55,32 +63,26 @@ public class Parser {
         advance();
         while (!matches(TokenType.END_TYPE)){
             Element newMember = parseElement(nestingLevel);
-            if (newMember == null && matches(TokenType.EOF))
-                throw new ParserException(unexpectedToken(tokens.get(pos)));
-
             values.add(newMember);
         }
         advance();
         return new Element.JArray(values);
     }
 
+    // di32ei45ee
     private Element parseDictionary(int nestingLevel) {
         Map<Element, Element> dict = new HashMap<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
             Element key = parseElement(nestingLevel);
-            if (key == null && matches(TokenType.EOF))
-                throw new ParserException(unexpectedToken(tokens.get(pos)));
-
             Element value = parseElement(nestingLevel);
-            if (value == null) throw new IllegalArgumentException();
             dict.put(key, value);
         }
         advance();
         return new Element.JDictionary(dict, nestingLevel);
     }
 
-    private Element parseLengthAndString() {
+    private Element parseString() {
         advance();
         consume(TokenType.SEPARATOR);
         Token str = tokens.get(pos);
@@ -92,7 +94,8 @@ public class Parser {
     }
 
     private Element parseInteger() {
-        Token token = tokens.get(++pos);
+        advance();
+        Token token = tokens.get(pos);
         if (!matches(TokenType.INTEGER)){
             throw new ParserException(unexpectedToken(token, TokenType.INTEGER));
         }

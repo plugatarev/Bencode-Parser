@@ -1,4 +1,4 @@
-package com.github.plugatarev.bencode.Error;
+package com.github.plugatarev.bencode.error;
 
 public class ConsoleReporter implements ErrorReporter {
     private static final int MAX_MESSAGES = 20;

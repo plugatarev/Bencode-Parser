@@ -1,8 +1,10 @@
-package com.github.plugatarev.bencode.Lexer;
+package com.github.plugatarev.bencode;
 
-import com.github.plugatarev.bencode.Error.ErrorReporter;
-import com.github.plugatarev.bencode.Parser.Element;
-import com.github.plugatarev.bencode.Parser.Parser;
+import com.github.plugatarev.bencode.error.ErrorReporter;
+import com.github.plugatarev.bencode.lexer.Token;
+import com.github.plugatarev.bencode.lexer.TokenType;
+import com.github.plugatarev.bencode.parser.Element;
+import com.github.plugatarev.bencode.parser.Parser;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,10 +30,10 @@ public class ParserTest {
     @Test
     public void list(){
         List<Element> elements = parse(tokens(new TokenInfo(TokenType.LIST, "l"),
-                                              new TokenInfo(TokenType.LENGTH, "3"),
+                                              new TokenInfo(TokenType.STRING_BEGIN, "3"),
                                               new TokenInfo(TokenType.SEPARATOR, ":"),
                                               new TokenInfo(TokenType.STRING, "key"),
-                                              new TokenInfo(TokenType.LENGTH, "7"),
+                                              new TokenInfo(TokenType.STRING_BEGIN, "7"),
                                               new TokenInfo(TokenType.SEPARATOR, ":"),
                                               new TokenInfo(TokenType.STRING, "generic"),
                                               new TokenInfo(TokenType.END_TYPE, null))
@@ -48,10 +50,10 @@ public class ParserTest {
     @Test
     public void dictionary(){
         List<Element> elements = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
-                new TokenInfo(TokenType.LENGTH, "3"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
                 new TokenInfo(TokenType.SEPARATOR, ":"),
                 new TokenInfo(TokenType.STRING, "key"),
-                new TokenInfo(TokenType.LENGTH, "7"),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
                 new TokenInfo(TokenType.SEPARATOR, ":"),
                 new TokenInfo(TokenType.STRING, "generic"),
                 new TokenInfo(TokenType.END_TYPE, null))

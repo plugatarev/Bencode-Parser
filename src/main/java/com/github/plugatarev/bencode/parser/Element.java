@@ -1,4 +1,4 @@
-package com.github.plugatarev.bencode.Parser;
+package com.github.plugatarev.bencode.parser;
 
 import java.util.List;
 import java.util.Map;
