@@ -54,43 +54,40 @@ public class Parser {
         List<Element> values = new ArrayList<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
-            if (matches(TokenType.EOL)){
-                pos++;
-                continue;
-            }
-            if (matches(TokenType.EOF)) throw new ParserException(unexpectedToken(tokens.get(pos), TokenType.END_TYPE));
-            values.add(parseElement(nestingLevel));
+            Element newMember = parseElement(nestingLevel);
+            if (newMember == null && matches(TokenType.EOF))
+                throw new ParserException(unexpectedToken(tokens.get(pos)));
+
+            values.add(newMember);
         }
-        pos++;
+        advance();
         return new Element.JArray(values);
     }
 
     private Element parseDictionary(int nestingLevel) {
         Map<Element, Element> dict = new HashMap<>();
-        pos++;
+        advance();
         while (!matches(TokenType.END_TYPE)){
-            if (matches(TokenType.EOL)){
-                pos++;
-                continue;
-            }
-            if (matches(TokenType.EOF)) throw new ParserException(unexpectedToken(tokens.get(pos), TokenType.END_TYPE));
-            Element key = parseLengthAndString();
+            Element key = parseElement(nestingLevel);
+            if (key == null && matches(TokenType.EOF))
+                throw new ParserException(unexpectedToken(tokens.get(pos)));
+
             Element value = parseElement(nestingLevel);
             if (value == null) throw new IllegalArgumentException();
             dict.put(key, value);
         }
-        pos++;
+        advance();
         return new Element.JDictionary(dict, nestingLevel);
     }
 
     private Element parseLengthAndString() {
-        pos++;
+        advance();
         consume(TokenType.SEPARATOR);
         Token str = tokens.get(pos);
         if (!matches(TokenType.STRING)){
             throw new ParserException(unexpectedToken(str, TokenType.STRING));
         }
-        pos++;
+        advance();
         return new Element.JString((String) str.value());
     }
 
@@ -99,10 +96,11 @@ public class Parser {
         if (!matches(TokenType.INTEGER)){
             throw new ParserException(unexpectedToken(token, TokenType.INTEGER));
         }
-        pos++;
+        advance();
         consume(TokenType.END_TYPE);
         return new Element.JInteger((Integer) token.value());
     }
+
     private boolean matches(TokenType first, TokenType... rest) {
         Token token = tokens.get(pos);
         TokenType actual = token.tokenType();
