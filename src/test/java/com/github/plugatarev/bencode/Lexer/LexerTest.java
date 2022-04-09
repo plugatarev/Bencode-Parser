@@ -42,7 +42,7 @@ public class LexerTest {
                 TokenType.END_TYPE, TokenType.EOL, TokenType.EOF
                 );
     }
-
+    @Test
     public void incorrectSymbolInBencodeData(){
         Assert.assertNull(scan("d3@:cow3:moo3:keye"));
     }

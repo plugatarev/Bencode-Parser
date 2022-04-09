@@ -6,7 +6,6 @@ import com.github.plugatarev.bencode.Parser.Parser;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
