@@ -66,7 +66,7 @@ public class Parser {
             values.add(newMember);
         }
         advance();
-        return new Element.JArray(values);
+        return new Element.BArray(values);
     }
 
     // di32ei45ee
@@ -79,7 +79,7 @@ public class Parser {
             dict.put(key, value);
         }
         advance();
-        return new Element.JDictionary(dict, nestingLevel);
+        return new Element.BDictionary(dict, nestingLevel);
     }
 
     private Element parseString() {
@@ -90,7 +90,7 @@ public class Parser {
             throw new ParserException(unexpectedToken(str, TokenType.STRING));
         }
         advance();
-        return new Element.JString((String) str.value());
+        return new Element.BString((String) str.value());
     }
 
     private Element parseInteger() {
@@ -101,7 +101,7 @@ public class Parser {
         }
         advance();
         consume(TokenType.END_TYPE);
-        return new Element.JInteger((Integer) token.value());
+        return new Element.BInteger((Integer) token.value());
     }
 
     private boolean matches(TokenType first, TokenType... rest) {
