@@ -15,24 +15,21 @@ public class Parser {
         this.errorReporter = errorReporter;
     }
 
-    public static List<Element> parse(List<Token> tokens, ErrorReporter errorReporter) {
+    public static Element parse(List<Token> tokens, ErrorReporter errorReporter) {
         Parser parser = new Parser(tokens, errorReporter);
         return parser.parse();
     }
 
-    private List<Element> parse() {
+    private Element parse() {
         boolean hasErrors = false;
-        List<Element> members = new ArrayList<>();
+        Element element = null;
         while (!matches(TokenType.EOF)) {
             try {
-                // CR: only one root element, check that file has ended
-                Element expr = null;
                 if (tokens.get(pos).tokenType() != TokenType.EOL) {
-                    expr = parseElement(0);
+                    element = parseElement();
                 }
                 consume(TokenType.EOL);
-                if (expr == null) continue;
-                members.add(expr);
+                if (element == null) continue;
             } catch (ParserException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
@@ -40,15 +37,15 @@ public class Parser {
                 }
             }
         }
-        return hasErrors ? null : members;
+        return hasErrors ? null : element;
     }
 
-    private Element parseElement(int nestingLevel) {
+    private Element parseElement() {
         TokenType type = tokens.get(pos).tokenType();
         if (type == TokenType.EOL) consume(TokenType.EOL);
         return switch (type){
-            case DICTIONARY -> parseDictionary(nestingLevel + 1);
-            case LIST -> parseList(nestingLevel);
+            case DICTIONARY -> parseDictionary();
+            case LIST -> parseList();
             case INTEGER_BEGIN -> parseInteger();
             case STRING_BEGIN -> parseString();
             default -> {
@@ -58,11 +55,11 @@ public class Parser {
         };
     }
 
-    private Element parseList(int nestingLevel) {
+    private Element parseList() {
         List<Element> values = new ArrayList<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
-            Element newMember = parseElement(nestingLevel);
+            Element newMember = parseElement();
             values.add(newMember);
         }
         advance();
@@ -70,16 +67,16 @@ public class Parser {
     }
 
     // di32ei45ee
-    private Element parseDictionary(int nestingLevel) {
+    private Element parseDictionary() {
         Map<Element, Element> dict = new HashMap<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
-            Element key = parseElement(nestingLevel);
-            Element value = parseElement(nestingLevel);
+            Element key = parseElement();
+            Element value = parseElement();
             dict.put(key, value);
         }
         advance();
-        return new Element.BDictionary(dict, nestingLevel);
+        return new Element.BDictionary(dict);
     }
 
     private Element parseString() {
