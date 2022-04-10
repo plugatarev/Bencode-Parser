@@ -20,8 +20,8 @@ public class Main {
         ErrorReporter reporter = new ConsoleReporter();
 
         List<Token> tokens = Lexer.scan(br, reporter);
-        List<Element> jsonTokens = Parser.parse(tokens, new ConsoleReporter());
-        // CR: use json converter
-        System.out.println(jsonTokens);
+        Element jsonTokens = Parser.parse(tokens, new ConsoleReporter());
+        JsonConverter converter = new JsonConverter();
+        System.out.println(converter.json(jsonTokens));
     }
 }
