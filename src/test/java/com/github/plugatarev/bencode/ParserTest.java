@@ -16,20 +16,28 @@ import java.util.Map;
 public class ParserTest {
     @Test
     public void empty() {
-        List<Element> elements = parse(tokens());
-        Assert.assertTrue(elements.isEmpty());
+        Element elements = parse(tokens());
+        Assert.assertNull(elements);
     }
 
     @Test
     public void number() {
-        List<Element> elements = parse(createIntegerNumber(12324));
-        System.out.println(elements.get(0).toString());
-        Assert.assertEquals(new Element.JInteger(12324), elements.get(0));
+        Element element = parse(createIntegerNumber(12324));
+        Assert.assertEquals(new Element.BInteger(12324), element);
+    }
+
+    @Test
+    public void string(){
+        Element element = parse(tokens(new TokenInfo(TokenType.STRING_BEGIN, 5),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "Hello")));
+        Element.BString expected = new Element.BString("Hello");
+        Assert.assertEquals(element, expected);
     }
 
     @Test
     public void list(){
-        List<Element> elements = parse(tokens(new TokenInfo(TokenType.LIST, "l"),
+        Element element = parse(tokens(new TokenInfo(TokenType.LIST, "l"),
                                               new TokenInfo(TokenType.STRING_BEGIN, "3"),
                                               new TokenInfo(TokenType.SEPARATOR, ":"),
                                               new TokenInfo(TokenType.STRING, "key"),
@@ -38,18 +46,17 @@ public class ParserTest {
                                               new TokenInfo(TokenType.STRING, "generic"),
                                               new TokenInfo(TokenType.END_TYPE, null))
         );
+
         List<Element> members = new ArrayList<>();
-        members.add(new Element.JString("key"));
-        members.add(new Element.JString("generic"));
-        Element.JArray expected = new Element.JArray(members);
-        List<Element> expList = new ArrayList<>();
-        expList.add(expected);
-        Assert.assertEquals(elements, expList);
+        members.add(new Element.BString("key"));
+        members.add(new Element.BString("generic"));
+        Element.BArray expected = new Element.BArray(members);
+        Assert.assertEquals(element, expected);
     }
 
     @Test
     public void dictionary(){
-        List<Element> elements = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
+        Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
                 new TokenInfo(TokenType.STRING_BEGIN, "3"),
                 new TokenInfo(TokenType.SEPARATOR, ":"),
                 new TokenInfo(TokenType.STRING, "key"),
@@ -58,12 +65,10 @@ public class ParserTest {
                 new TokenInfo(TokenType.STRING, "generic"),
                 new TokenInfo(TokenType.END_TYPE, null))
         );
-        Map<Element, Element> content = new HashMap<>();
-        content.put(new Element.JString("key"), new Element.JString("generic"));
-        Element.JDictionary expDictionary = new Element.JDictionary(content, 1);
-        List<Element> expList = new ArrayList<>();
-        expList.add(expDictionary);
-        Assert.assertEquals(elements, expList);
+        Map<Element, Element> dict = new HashMap<>();
+        dict.put(new Element.BString("key"), new Element.BString("generic"));
+        Element.BDictionary expected = new Element.BDictionary(dict);
+        Assert.assertEquals(element, expected);
     }
 
     private List<Token> createIntegerNumber(int value){
@@ -81,8 +86,9 @@ public class ParserTest {
         return tokens;
     }
 
-    private static List<Element> parse(List<Token> tokens) {
+    private static Element parse(List<Token> tokens) {
         return Parser.parse(tokens, ErrorReporter.EMPTY);
     }
+
     private record TokenInfo(TokenType type, Object value){}
 }
