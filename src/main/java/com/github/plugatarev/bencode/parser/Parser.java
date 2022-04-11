@@ -29,7 +29,6 @@ public class Parser {
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
-                if (element == null) continue;
             } catch (ParserException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
