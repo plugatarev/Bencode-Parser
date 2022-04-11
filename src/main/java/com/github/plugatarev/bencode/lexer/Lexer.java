@@ -41,8 +41,7 @@ public class Lexer {
                 if (isDigit(c)){
                     int start = i;
                     i = number(i, line, start, TokenType.STRING_BEGIN);
-                    // CR: double work
-                    lastNumber = Integer.parseInt(line.substring(start, i));
+                    lastNumber = (Integer)tokens.get(tokens.size() - 1).value();
                     continue;
                 }
                 if (Character.isAlphabetic(c) && type == null) {
@@ -98,8 +97,9 @@ public class Lexer {
         do {
             i++;
         } while (i < line.length() && Character.isDigit(line.charAt(i)));
+        int value = Integer.parseInt(line.substring(start, i));
         // CR: 121212312421423423423523564325243
-        tokens.add(new Token(type, nLine, start, Integer.parseInt(line.substring(start, i))));
+        tokens.add(new Token(type, nLine, start, value));
         return i;
     }
 
@@ -107,6 +107,9 @@ public class Lexer {
         // CR: support 1:$ + test 1:✨ ??
         // CR: substring
         int j = 1;
+//        String value = "";
+//        if (i + length < line.length()) value = line.substring(i, length);
+//        else return 1;
         StringBuilder sb = new StringBuilder();
         do {
             sb.append(line.charAt(i));
