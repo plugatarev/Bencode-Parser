@@ -19,7 +19,7 @@ public class JsonConverter {
 
                 nestingLevel++;
                 for (Map.Entry<Element, Element> entry : jDictionary.dict().entrySet()) {
-                    appendStrings(str, shifted(entry.getKey()), ": ", json(entry.getValue()), "\n");
+                    appendStrings(str, shifted(entry.getKey().toString()), ": ", json(entry.getValue()), "\n");
                 }
                 nestingLevel--;
                 str.append(shifted("}"));
