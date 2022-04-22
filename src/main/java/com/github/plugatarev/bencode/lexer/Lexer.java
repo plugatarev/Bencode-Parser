@@ -11,6 +11,7 @@ public class Lexer {
     private final List<Token> tokens = new ArrayList<>();
     private int nLine;
     private final ErrorReporter reporter;
+    private boolean hasErrors = false;
 
     private Lexer(BufferedReader br, ErrorReporter reporter) {
         this.br = br;
@@ -24,8 +25,7 @@ public class Lexer {
 
     private List<Token> scan() {
         String line;
-        boolean hasErrors = false;
-        int lastNumber = -1;
+        int lastNumber = 0;
         while ((line = getLine()) != null) {
             nLine++;
             int i = 0;
@@ -35,17 +35,17 @@ public class Lexer {
                 if (type == TokenType.INTEGER_BEGIN) {
                     tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
                     int start = ++i;
-                    i = number(i, line, start, TokenType.INTEGER);
+                    if ((i = number(i, line, start, TokenType.INTEGER)) == -1) return null;
+                    continue;
+                }
+                if (type == TokenType.STRING) {
+                    if ((i = string(i, line, lastNumber, nLine)) == -1) return null;
                     continue;
                 }
                 if (isDigit(c)){
                     int start = i;
-                    i = number(i, line, start, TokenType.STRING_BEGIN);
+                    if ((i = number(i, line, start, TokenType.STRING_BEGIN)) == -1) return null;
                     lastNumber = (Integer)tokens.get(tokens.size() - 1).value();
-                    continue;
-                }
-                if (Character.isAlphabetic(c) && type == null) {
-                    i = string(i, line, lastNumber, nLine);
                     continue;
                 }
                 if (type == null) {
@@ -73,8 +73,11 @@ public class Lexer {
                 """.formatted(c, nLine, line, " ".repeat(pos));
     }
 
+
+
     private TokenType getTokenType(char c){
-        if (!tokens.isEmpty() && tokens.get(tokens.size() - 1).tokenType() == TokenType.SEPARATOR) return null;
+        if (!tokens.isEmpty() && tokens.get(tokens.size() - 1).tokenType() == TokenType.SEPARATOR && (int)c <= 255)
+            return TokenType.STRING;
         return switch (c){
             case ':' -> TokenType.SEPARATOR;
             case 'i' -> TokenType.INTEGER_BEGIN;
@@ -93,31 +96,36 @@ public class Lexer {
         }
     }
 
-    private int number(int i, String line, int start, TokenType type) {
+    private int number(int i, String line, int start, TokenType type) throws NumberFormatException{
         do {
             i++;
         } while (i < line.length() && Character.isDigit(line.charAt(i)));
-        int value = Integer.parseInt(line.substring(start, i));
-        // CR: 121212312421423423423523564325243
+        int value;
+        try{
+            value = Integer.parseInt(line.substring(start, i));
+        }catch(NumberFormatException e){
+            if (!reporter.report(unknownChar(line, start - 1, 'i'))) {
+                return -1;
+            }
+            hasErrors = true;
+            return i;
+        }
         tokens.add(new Token(type, nLine, start, value));
         return i;
     }
 
     private int string(int i, String line, int length, int nLine){
-        // CR: support 1:$ + test 1:✨ ??
-        // CR: substring
-        int j = 1;
-//        String value = "";
-//        if (i + length < line.length()) value = line.substring(i, length);
-//        else return 1;
-        StringBuilder sb = new StringBuilder();
-        do {
-            sb.append(line.charAt(i));
-            i++;
-        } while (i != line.length() && Character.isAlphabetic(line.charAt(i)) && j++ < length);
-        String value = sb.toString();
+        String value = "";
+        if (length != 0 && i + length <= line.length()) value = line.substring(i, i + length);
+        else {
+            if (!reporter.report(unknownChar(line, i, line.charAt(i)))) {
+                return -1;
+            }
+            hasErrors = true;
+            return i + length;
+        }
         tokens.add(new Token(TokenType.STRING, nLine, i - length, value));
-        return i;
+        return i + length;
     }
 
     private boolean isDigit(char c) {
