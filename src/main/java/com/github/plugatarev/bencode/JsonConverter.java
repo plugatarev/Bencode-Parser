@@ -11,7 +11,7 @@ public class JsonConverter {
 
     public String json(Element element) {
         return switch (element) {
-            case Element.BInteger jInteger -> shifted(jInteger.value());
+            case Element.BInteger jInteger -> String.valueOf(jInteger.value());
             case Element.BDictionary jDictionary -> {
                 StringBuilder str = new StringBuilder();
                 if (nestingLevel == 0) appendStrings(str, shifted("{"), "\n");
