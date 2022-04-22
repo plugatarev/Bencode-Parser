@@ -17,7 +17,16 @@ import static org.hamcrest.CoreMatchers.is;
 public class LexerTest {
     private static List<TokenType> scan(String expressions) {
         BufferedReader br = new BufferedReader(new StringReader(expressions));
-        List<Token> tokens = Lexer.scan(br, ErrorReporter.EMPTY);
+        ErrorReporter errorReporter = new ErrorReporter() {
+            int i = 0;
+            @Override
+            public boolean report(String message) {
+                i++;
+                if (i < 20) return true;
+                return false;
+            }
+        };
+        List<Token> tokens = Lexer.scan(br, errorReporter);
         return tokens == null ? null : tokens.stream().map(Token::tokenType).toList();
     }
 
@@ -45,6 +54,49 @@ public class LexerTest {
                 TokenType.END_TYPE, TokenType.EOL, TokenType.EOF
                 );
     }
+
+    @Test
+    public void emojiSymbol() {
+        Assert.assertNull(scan("l2:\uD83E\uDDE02:\uD83E\uDD21e"));
+    }
+
+    @Test
+    public void string(){
+        assertTypes(scan("5:12d$@"),
+                TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.STRING, TokenType.EOL, TokenType.EOF);
+    }
+
+    @Test
+    public void stringWithoutLength(){
+        Assert.assertNull(scan(":12de$@"));
+    }
+
+    @Test
+    public void stringWithoutSeparator(){
+        Assert.assertNull(scan("5rre$@"));
+    }
+
+    @Test
+    public void stringLengthLessThanDeclared(){
+        Assert.assertNull(scan("5:1e$@"));
+    }
+
+    @Test
+    public void stringLengthMoreThanDeclared(){
+        Assert.assertNull(scan("5:12de$@"));
+    }
+
+    @Test
+    public void number(){
+        assertTypes(scan("i432e"),
+                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
+    }
+
+    @Test
+    public void numberMoreThanMaxInteger(){
+        Assert.assertNull(scan("i234324343243424e"));
+    }
+
     @Test
     public void incorrectSymbolInBencodeData(){
         Assert.assertNull(scan("d3@:cow3:moo3:keye"));

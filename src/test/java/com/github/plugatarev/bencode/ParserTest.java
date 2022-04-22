@@ -55,6 +55,19 @@ public class ParserTest {
     }
 
     @Test
+    public void listWithoutEndSymbol(){
+        Element element = parse(tokens(new TokenInfo(TokenType.LIST, "l"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key"),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "generic")
+        ));
+        Assert.assertNull(element);
+    }
+
+    @Test
     public void dictionary(){
         Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
                 new TokenInfo(TokenType.STRING_BEGIN, "3"),
@@ -69,6 +82,29 @@ public class ParserTest {
         dict.put(new Element.BString("key"), new Element.BString("generic"));
         Element.BDictionary expected = new Element.BDictionary(dict);
         Assert.assertEquals(element, expected);
+    }
+
+    @Test
+    public void dictionaryWithoutEndSymbol(){
+        Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key"),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "generic")
+        ));
+        Assert.assertNull(element);
+    }
+
+    @Test
+    public void dictionaryWithIncorrectNumbersElements(){
+        Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key")
+        ));
+        Assert.assertNull(element);
     }
 
     private List<Token> createIntegerNumber(int value){
@@ -87,7 +123,16 @@ public class ParserTest {
     }
 
     private static Element parse(List<Token> tokens) {
-        return Parser.parse(tokens, ErrorReporter.EMPTY);
+        ErrorReporter errorReporter = new ErrorReporter() {
+            int i = 0;
+            @Override
+            public boolean report(String message) {
+                i++;
+                if (i < 20) return true;
+                return false;
+            }
+        };
+        return Parser.parse(tokens, errorReporter);
     }
 
     private record TokenInfo(TokenType type, Object value){}
