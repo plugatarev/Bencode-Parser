@@ -51,6 +51,17 @@ public class IntegrationTest {
     }
 
     @Test
+    public void dictionary(){
+        String input = "d3:bar4:spam3:fooi42ee";
+        String expected = """
+                {
+                  "bar": "spam"
+                  "foo": 42
+                }""";
+        test(input, expected);
+    }
+
+    @Test
     public void allTypes(){
         String input = "d3:cow3:moo3:keyd2:bb3:hhh2:ffd4:keysl1:i1:d1:l1:eeee4:spaml4:infoi343242e5:6$%!$ee";
         String expected = """
