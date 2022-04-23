@@ -18,6 +18,17 @@ public class IntegrationTest {
 
     ErrorReporter reporter = new ConsoleReporter();
 
+    void testLexerException(String input, String expected){
+        Reader reader = new StringReader(input);
+        BufferedReader br = new BufferedReader(reader);
+        try {
+            Lexer.scan(br, reporter);
+        }
+        catch (Exception e){
+            Assert.assertEquals(e.getMessage(), expected);
+        }
+    }
+
     void test(String input, String expected){
         Reader reader = new StringReader(input);
         BufferedReader br = new BufferedReader(reader);
@@ -81,20 +92,22 @@ public class IntegrationTest {
     }
 
     @Test
+    public void strangeSymbol(){
+        String input = "5:1e$@e*";
+        String expected = """
+                             Unknown char '*' at line 1:
+                             5:1e$@e*
+                                    ^--- here""";
+        testLexerException(input, expected);
+    }
+
+    @Test
     public void incorrectLengthOfString(){
+        String input = "5:1e$@";
         String expected = """
                              Unknown char '1' at line 1:
                              5:1e$@
                                ^--- here""";
-        String input = "5:1e$@";
-        Reader reader = new StringReader(input);
-        BufferedReader br = new BufferedReader(reader);
-        try {
-            Lexer.scan(br, reporter);
-        }
-        catch (Exception e){
-            Assert.assertEquals(e.getMessage(), expected);
-        }
-
+        testLexerException(input, expected);
     }
 }

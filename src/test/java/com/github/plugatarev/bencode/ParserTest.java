@@ -128,8 +128,7 @@ public class ParserTest {
             @Override
             public boolean report(String message) {
                 i++;
-                if (i < 20) return true;
-                return false;
+                return i < 20;
             }
         };
         return Parser.parse(tokens, errorReporter);
