@@ -29,6 +29,7 @@ public class Parser {
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
+                // CR: why not ParserException?
             } catch (RuntimeException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
@@ -41,6 +42,7 @@ public class Parser {
 
     private Element parseElement() {
         TokenType type = tokens.get(pos).tokenType();
+        // CR: seems redundant, please check
         if (type == TokenType.EOL) consume(TokenType.EOL);
         return switch (type){
             case DICTIONARY -> parseDictionary();
@@ -48,7 +50,8 @@ public class Parser {
             case INTEGER_BEGIN -> parseInteger();
             case STRING_BEGIN -> parseString();
             default -> {
-                String error = "Expected one of token types: " + Arrays.toString(TokenType.values()) + ", got " + type;
+                // CR: throw ParserException with position info
+                String error = "Expected start of bencode element, got " + type;
                 throw new IllegalStateException(error);
             }
         };
@@ -62,15 +65,16 @@ public class Parser {
             values.add(newMember);
         }
         advance();
-        return new Element.BArray(values);
+        return new Element.BList(values);
     }
 
-    // di32ei45ee
     private Element parseDictionary() {
         Map<Element, Element> dict = new HashMap<>();
         advance();
         while (!matches(TokenType.END_TYPE)){
-            Element key = parseElement();
+            // CR: add test that only string keys are valid
+            // CR: you need to assure that keys are in lexicographical order (see bencode spec)
+            Element key = parseString();
             Element value = parseElement();
             dict.put(key, value);
         }
@@ -81,21 +85,13 @@ public class Parser {
     private Element parseString() {
         advance();
         consume(TokenType.SEPARATOR);
-        Token str = tokens.get(pos);
-        if (!matches(TokenType.STRING)){
-            throw new ParserException(unexpectedToken(str, TokenType.STRING));
-        }
-        advance();
+        Token str = consume(TokenType.STRING);
         return new Element.BString((String) str.value());
     }
 
     private Element parseInteger() {
         advance();
-        Token token = tokens.get(pos);
-        if (!matches(TokenType.INTEGER)){
-            throw new ParserException(unexpectedToken(token, TokenType.INTEGER));
-        }
-        advance();
+        Token token = consume(TokenType.INTEGER);
         consume(TokenType.END_TYPE);
         return new Element.BInteger((Integer) token.value());
     }
@@ -116,11 +112,12 @@ public class Parser {
         return token;
     }
 
-    private void consume(TokenType expected) {
+    private Token consume(TokenType expected) {
         Token token = advance();
         if (token.tokenType() != expected) {
             throw new ParserException(unexpectedToken(token, expected));
         }
+        return token;
     }
 
     private static String unexpectedToken(Token token, TokenType... expected) {

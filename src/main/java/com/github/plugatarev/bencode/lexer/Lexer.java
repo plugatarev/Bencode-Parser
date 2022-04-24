@@ -35,6 +35,8 @@ public class Lexer {
                 if (type == TokenType.INTEGER_BEGIN) {
                     tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
                     int start = ++i;
+                    // CR: no need to pass both 'i' and 'start', it is enough to have only one of them
+                    // CR: add test that verifies that negative number is handled as expected
                     if ((i = number(i, line, start, TokenType.INTEGER)) == -1) return null;
                     continue;
                 }
@@ -44,6 +46,7 @@ public class Lexer {
                 }
                 if (isDigit(c)){
                     int start = i;
+                    // CR: add test that verifies that negative length is handled as expected
                     if ((i = number(i, line, start, TokenType.STRING_BEGIN)) == -1) return null;
                     lastNumber = (Integer)tokens.get(tokens.size() - 1).value();
                     continue;
@@ -76,8 +79,11 @@ public class Lexer {
 
 
     private TokenType getTokenType(char c){
-        if (!tokens.isEmpty() && tokens.get(tokens.size() - 1).tokenType() == TokenType.SEPARATOR && (int)c <= 255)
+        Token lastToken = getLastToken();
+        // CR: c <= 127, also move this check to separate method for clarity
+        if (lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)c <= 255) {
             return TokenType.STRING;
+        }
         return switch (c){
             case ':' -> TokenType.SEPARATOR;
             case 'i' -> TokenType.INTEGER_BEGIN;
@@ -88,6 +94,10 @@ public class Lexer {
         };
     }
 
+    private Token getLastToken() {
+        return tokens.isEmpty() ? null : tokens.get(tokens.size() - 1);
+    }
+
     private String getLine() {
         try {
             return br.readLine();
@@ -96,7 +106,7 @@ public class Lexer {
         }
     }
 
-    private int number(int i, String line, int start, TokenType type) throws NumberFormatException{
+    private int number(int i, String line, int start, TokenType type) {
         do {
             i++;
         } while (i < line.length() && Character.isDigit(line.charAt(i)));
@@ -104,6 +114,7 @@ public class Lexer {
         try{
             value = Integer.parseInt(line.substring(start, i));
         }catch(NumberFormatException e){
+            // CR: it is not an unknown char, it is another type of error
             if (!reporter.report(unknownChar(line, start - 1, 'i'))) {
                 return -1;
             }
@@ -115,9 +126,12 @@ public class Lexer {
     }
 
     private int string(int i, String line, int length, int nLine){
-        String value = "";
-        if (length != 0 && i + length <= line.length()) value = line.substring(i, i + length);
+        final String value;
+        if (length != 0 && i + length <= line.length()) {
+            value = line.substring(i, i + length);
+        }
         else {
+            // CR: another type of error
             if (!reporter.report(unknownChar(line, i, line.charAt(i)))) {
                 return -1;
             }

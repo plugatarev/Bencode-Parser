@@ -2,7 +2,6 @@ package com.github.plugatarev.bencode;
 
 import com.github.plugatarev.bencode.parser.Element;
 
-import java.util.Map;
 
 public class JsonConverter {
 
@@ -11,28 +10,27 @@ public class JsonConverter {
 
     public String json(Element element) {
         return switch (element) {
-            case Element.BInteger jInteger -> String.valueOf(jInteger.value());
-            case Element.BDictionary jDictionary -> {
-                StringBuilder str = new StringBuilder();
-                if (nestingLevel == 0) appendStrings(str, shifted("{"), "\n");
-                else appendStrings(str, "\n", shifted("{"), "\n");
+            case Element.BInteger bInteger -> String.valueOf(bInteger.value());
+            case Element.BDictionary bDictionary -> {
+                StringBuilder sb = new StringBuilder();
+                if (nestingLevel == 0) appendStrings(sb, "{", "\n");
+                else appendStrings(sb, "\n", shifted("{"), "\n");
 
                 nestingLevel++;
-                for (Map.Entry<Element, Element> entry : jDictionary.dict().entrySet()) {
-                    appendStrings(str, shifted(entry.getKey().toString()), ": ", json(entry.getValue()), "\n");
-                }
+                bDictionary.dict().forEach((k, v) -> appendStrings(sb, shifted(k), ": ", json(v), "\n"));
                 nestingLevel--;
-                str.append(shifted("}"));
-                yield str.toString();
+
+                sb.append(shifted("}"));
+                yield sb.toString();
             }
-            case Element.BArray jArray -> jArray.member().toString();
-            case Element.BString jString -> jString.toString();
+            case Element.BList bList -> bList.member().toString();
+            case Element.BString bString -> bString.toString();
         };
     }
 
-    private void appendStrings(StringBuilder string, String... part){
+    private void appendStrings(StringBuilder sb, String... part){
         for (String p : part){
-            string.append(p);
+            sb.append(p);
         }
     }
 

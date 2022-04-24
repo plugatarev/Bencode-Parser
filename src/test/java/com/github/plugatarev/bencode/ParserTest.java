@@ -50,7 +50,7 @@ public class ParserTest {
         List<Element> members = new ArrayList<>();
         members.add(new Element.BString("key"));
         members.add(new Element.BString("generic"));
-        Element.BArray expected = new Element.BArray(members);
+        Element.BList expected = new Element.BList(members);
         Assert.assertEquals(element, expected);
     }
 

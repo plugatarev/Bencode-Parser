@@ -12,7 +12,7 @@ public sealed interface Element {
         }
     }
 
-    record BArray(List<Element> member) implements Element{}
+    record BList(List<Element> member) implements Element{}
 
     record BDictionary(Map<Element, Element> dict) implements Element{}
 
