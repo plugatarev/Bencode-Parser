@@ -14,7 +14,7 @@ public sealed interface Element {
 
     record BList(List<Element> member) implements Element{}
 
-    record BDictionary(Map<Element, Element> dict) implements Element{}
+    record BDictionary(Map<Element.BString, Element> dict) implements Element{}
 
     record BString(String str) implements  Element{
         @Override
