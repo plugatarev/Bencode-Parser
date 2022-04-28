@@ -42,8 +42,8 @@ public class IntegrationTest {
 
     @Test
     public void string(){
-        String expected = "\"hello\"";
-        String input = "5:hello";
+        String expected = "\"input\"";
+        String input = "5:input";
         test(input, expected);
     }
 
@@ -78,7 +78,6 @@ public class IntegrationTest {
         String expected = """
                 {
                   "cow": "moo"
-                  "spam": ["info", 343242, "6$%!$"]
                   "key":\s
                   {
                     "bb": "hhh"
@@ -87,6 +86,7 @@ public class IntegrationTest {
                       "keys": ["i", "d", "l", "e"]
                     }
                   }
+                  "spam": ["info", 343242, "6$%!$"]
                 }""";
         test(input, expected);
     }

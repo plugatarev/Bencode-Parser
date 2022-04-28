@@ -78,10 +78,24 @@ public class ParserTest {
                 new TokenInfo(TokenType.STRING, "generic"),
                 new TokenInfo(TokenType.END_TYPE, null))
         );
-        Map<Element, Element> dict = new HashMap<>();
+        Map<Element.BString, Element> dict = new HashMap<>();
         dict.put(new Element.BString("key"), new Element.BString("generic"));
         Element.BDictionary expected = new Element.BDictionary(dict);
         Assert.assertEquals(element, expected);
+    }
+
+    @Test
+    public void dictionaryKeyNotString(){
+        Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
+                new TokenInfo(TokenType.INTEGER_BEGIN, "i"),
+                new TokenInfo(TokenType.INTEGER, 123),
+                new TokenInfo(TokenType.END_TYPE, null),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "generic"),
+                new TokenInfo(TokenType.END_TYPE, null))
+        );
+        Assert.assertNull(element);
     }
 
     @Test

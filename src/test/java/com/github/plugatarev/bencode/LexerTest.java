@@ -22,12 +22,24 @@ public class LexerTest {
             @Override
             public boolean report(String message) {
                 i++;
-                if (i < 20) return true;
-                return false;
+                return i < 20;
             }
         };
         List<Token> tokens = Lexer.scan(br, errorReporter);
         return tokens == null ? null : tokens.stream().map(Token::tokenType).toList();
+    }
+
+    private static List<Token> scant(String expressions) {
+        BufferedReader br = new BufferedReader(new StringReader(expressions));
+        ErrorReporter errorReporter = new ErrorReporter() {
+            int i = 0;
+            @Override
+            public boolean report(String message) {
+                i++;
+                return i < 20;
+            }
+        };
+        return Lexer.scan(br, errorReporter);
     }
 
     private static void assertTypes(List<TokenType> types, TokenType... expected) {
@@ -67,6 +79,11 @@ public class LexerTest {
     }
 
     @Test
+    public void negativeLength(){
+        Assert.assertNull(scan("-2:input"));
+    }
+
+    @Test
     public void stringWithoutLength(){
         Assert.assertNull(scan(":12de$@"));
     }
@@ -93,6 +110,15 @@ public class LexerTest {
     }
 
     @Test
+    public void negativeNumber(){
+
+        assertTypes(scan("i-2132e"),
+                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
+        List<Token> tokens = scant("i-213e");
+        Assert.assertEquals(-213, tokens.get(1).value());
+    }
+
+    @Test
     public void numberMoreThanMaxInteger(){
         Assert.assertNull(scan("i234324343243424e"));
     }
@@ -107,12 +133,22 @@ public class LexerTest {
         assertTypes(scan("\n\n"), TokenType.EOL, TokenType.EOL, TokenType.EOF);
     }
 
+    //TODO: TEST: digit "000"
     @Test
-    public void strangeDigits() {
-        // some strange digits from Character.isDigit() javadoc
-        String digits = "\u0660\u06F0\u0966\uFF10";
-        for (int i = 0; i < digits.length(); i++) {
-            Assert.assertNull(scan(String.valueOf(digits.charAt(i))));
-        }
+    public void numberStartingFromZeros(){
+        String digit = "i00323e";
+        Assert.assertNull(scan(digit));
+    }
+
+    @Test
+    public void negativeZero(){
+        String negativeZero = "i-0e";
+        Assert.assertNull(scan(negativeZero));
+    }
+
+    @Test
+    public void zeroLength(){
+        String s = "0:";
+        assertTypes(scan(s), TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.EOL, TokenType.EOF);
     }
 }
