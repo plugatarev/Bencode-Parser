@@ -34,10 +34,9 @@ public class Lexer {
                 TokenType type = getTokenType(c);
                 if (type == TokenType.INTEGER_BEGIN) {
                     tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
-                    int start = ++i;
-                    // CR: no need to pass both 'i' and 'start', it is enough to have only one of them
-                    // CR: add test that verifies that negative number is handled as expected
-                    if ((i = number(i, line, start, TokenType.INTEGER)) == -1) return null;
+                    //FIX CR: no need to pass both 'i' and 'start', it is enough to have only one of them
+                    //FIX CR: add test that verifies that negative number is handled as expected
+                    if ((i = number(++i, line, TokenType.INTEGER)) == -1) return null;
                     continue;
                 }
                 if (type == TokenType.STRING) {
@@ -45,10 +44,9 @@ public class Lexer {
                     continue;
                 }
                 if (isDigit(c)){
-                    int start = i;
-                    // CR: add test that verifies that negative length is handled as expected
-                    if ((i = number(i, line, start, TokenType.STRING_BEGIN)) == -1) return null;
-                    lastNumber = (Integer)tokens.get(tokens.size() - 1).value();
+                    // OK CR: add test that verifies that negative length is handled as expected
+                    if ((i = number(i, line, TokenType.STRING_BEGIN)) == -1) return null;
+                    lastNumber = getLastToken() == null ? 0 : (Integer)getLastToken().value();
                     continue;
                 }
                 if (type == null) {
@@ -76,12 +74,30 @@ public class Lexer {
                 """.formatted(c, nLine, line, " ".repeat(pos));
     }
 
+    private String incorrectNumber(String line, int pos, String number){
+        return """
+                Incorrect number %s at line %d:
+                %s
+                %s^--- here
+                """.formatted(number, nLine, line, " ".repeat(pos));
+    }
 
+    private String incorrectStringLength(String line, int pos, int length){
+        return """
+                Expected string of length %d at line %d,
+                %s
+                %s^--- here"""
+                .formatted(length, nLine, line, " ".repeat(pos));
+    }
+
+    boolean isString(Token lastToken, char start){
+        return (lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)start <= 127);
+    }
 
     private TokenType getTokenType(char c){
         Token lastToken = getLastToken();
-        // CR: c <= 127, also move this check to separate method for clarity
-        if (lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)c <= 255) {
+        //FIX CR: c <= 127, also move this check to separate method for clarity
+        if (isString(lastToken, c)) {
             return TokenType.STRING;
         }
         return switch (c){
@@ -106,16 +122,19 @@ public class Lexer {
         }
     }
 
-    private int number(int i, String line, int start, TokenType type) {
+    private int number(int i, String line, TokenType type) {
+        int start = i;
         do {
             i++;
         } while (i < line.length() && Character.isDigit(line.charAt(i)));
         int value;
+        String number = line.substring(start, i);
         try{
-            value = Integer.parseInt(line.substring(start, i));
+            value = Integer.parseInt(number);
+            if ((value == 0 || number.charAt(0) == '0') && number.length() > 1) throw new NumberFormatException();
         }catch(NumberFormatException e){
-            // CR: it is not an unknown char, it is another type of error
-            if (!reporter.report(unknownChar(line, start - 1, 'i'))) {
+            //FIX CR: it is not an unknown char, it is another type of error
+            if (!reporter.report(incorrectNumber(line, start, number))) {
                 return -1;
             }
             hasErrors = true;
@@ -131,8 +150,8 @@ public class Lexer {
             value = line.substring(i, i + length);
         }
         else {
-            // CR: another type of error
-            if (!reporter.report(unknownChar(line, i, line.charAt(i)))) {
+            //FIX CR: another type of error
+            if (!reporter.report(incorrectStringLength(line, i, length))) {
                 return -1;
             }
             hasErrors = true;

@@ -3,7 +3,9 @@ package com.github.plugatarev.bencode.parser;
 import com.github.plugatarev.bencode.error.ErrorReporter;
 import com.github.plugatarev.bencode.lexer.Token;
 import com.github.plugatarev.bencode.lexer.TokenType;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Parser {
     private final List<Token> tokens;
@@ -29,8 +31,8 @@ public class Parser {
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
-                // CR: why not ParserException?
-            } catch (RuntimeException e) {
+                //FIX CR: why not ParserException?
+            } catch (ParserException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
                     return null;
@@ -42,25 +44,20 @@ public class Parser {
 
     private Element parseElement() {
         TokenType type = tokens.get(pos).tokenType();
-        // CR: seems redundant, please check
-        if (type == TokenType.EOL) consume(TokenType.EOL);
-        return switch (type){
+        //FIX CR: seems redundant, please check - yes
+        return switch (type) {
             case DICTIONARY -> parseDictionary();
             case LIST -> parseList();
             case INTEGER_BEGIN -> parseInteger();
             case STRING_BEGIN -> parseString();
-            default -> {
-                // CR: throw ParserException with position info
-                String error = "Expected start of bencode element, got " + type;
-                throw new IllegalStateException(error);
-            }
+            default -> throw new ParserException(unexpectedToken(tokens.get(pos)));
         };
     }
 
-    private Element parseList() {
+    private Element.BList parseList() {
         List<Element> values = new ArrayList<>();
         advance();
-        while (!matches(TokenType.END_TYPE)){
+        while (!matches(TokenType.END_TYPE)) {
             Element newMember = parseElement();
             values.add(newMember);
         }
@@ -68,13 +65,13 @@ public class Parser {
         return new Element.BList(values);
     }
 
-    private Element parseDictionary() {
-        Map<Element, Element> dict = new HashMap<>();
+    private Element.BDictionary parseDictionary() {
+        Map<Element.BString, Element> dict = new TreeMap<>(Comparator.comparing(Element.BString::str));
         advance();
-        while (!matches(TokenType.END_TYPE)){
-            // CR: add test that only string keys are valid
-            // CR: you need to assure that keys are in lexicographical order (see bencode spec)
-            Element key = parseString();
+        while (!matches(TokenType.END_TYPE)) {
+            //OK CR: add test that only string keys are valid
+            //OK CR: you need to assure that keys are in lexicographical order (see bencode spec)
+            Element.BString key = parseString();
             Element value = parseElement();
             dict.put(key, value);
         }
@@ -82,14 +79,14 @@ public class Parser {
         return new Element.BDictionary(dict);
     }
 
-    private Element parseString() {
-        advance();
+    private Element.BString parseString() {
+        consume(TokenType.STRING_BEGIN);
         consume(TokenType.SEPARATOR);
         Token str = consume(TokenType.STRING);
         return new Element.BString((String) str.value());
     }
 
-    private Element parseInteger() {
+    private Element.BInteger parseInteger() {
         advance();
         Token token = consume(TokenType.INTEGER);
         consume(TokenType.END_TYPE);
@@ -125,6 +122,7 @@ public class Parser {
         String position = pos == -1 ?
                 "End of line " + token.nLine() :
                 "Line " + token.nLine() + ", position: " + pos;
+
         return """
                 %s
                 Expected tokens: %s,
