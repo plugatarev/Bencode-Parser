@@ -3,7 +3,7 @@ package com.github.plugatarev.bencode.error;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-public class FileReporter implements ErrorReporter {
+public class FileReporter implements ErrorReporter, AutoCloseable {
     private static final int MAX_MESSAGES = 20;
     private int nMessages;
     private final BufferedWriter bw;
@@ -24,5 +24,10 @@ public class FileReporter implements ErrorReporter {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void close() throws Exception {
+        // CR: close file here, use try catch with resources in main
     }
 }

@@ -12,7 +12,7 @@ public sealed interface Element {
         }
     }
 
-    record BList(List<Element> member) implements Element{}
+    record BList(List<Element> list) implements Element{}
 
     record BDictionary(Map<Element.BString, Element> dict) implements Element{}
 

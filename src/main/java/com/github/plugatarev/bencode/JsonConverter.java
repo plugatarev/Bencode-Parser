@@ -23,7 +23,7 @@ public class JsonConverter {
                 sb.append(shifted("}"));
                 yield sb.toString();
             }
-            case Element.BList bList -> bList.member().toString();
+            case Element.BList bList -> bList.list().toString();
             case Element.BString bString -> bString.toString();
         };
     }

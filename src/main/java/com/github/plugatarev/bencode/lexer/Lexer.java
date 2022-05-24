@@ -3,6 +3,7 @@ import com.github.plugatarev.bencode.error.ErrorReporter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,8 +35,6 @@ public class Lexer {
                 TokenType type = getTokenType(c);
                 if (type == TokenType.INTEGER_BEGIN) {
                     tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
-                    //FIX CR: no need to pass both 'i' and 'start', it is enough to have only one of them
-                    //FIX CR: add test that verifies that negative number is handled as expected
                     if ((i = number(++i, line, TokenType.INTEGER)) == -1) return null;
                     continue;
                 }
@@ -44,7 +43,6 @@ public class Lexer {
                     continue;
                 }
                 if (isDigit(c)){
-                    // OK CR: add test that verifies that negative length is handled as expected
                     if ((i = number(i, line, TokenType.STRING_BEGIN)) == -1) return null;
                     lastNumber = getLastToken() == null ? 0 : (Integer)getLastToken().value();
                     continue;
@@ -56,7 +54,7 @@ public class Lexer {
                     }
                     hasErrors = true;
                 } else {
-                    tokens.add(new Token(type, nLine, i,c));
+                    tokens.add(new Token(type, nLine, i, c));
                 }
                 i++;
             }
@@ -66,6 +64,7 @@ public class Lexer {
         return hasErrors ? null : tokens;
     }
 
+    // CR: only difference is the first line, merge errors into one method
     private String unknownChar(String line, int pos, char c) {
         return """
                 Unknown char '%c' at line %d:
@@ -90,13 +89,14 @@ public class Lexer {
                 .formatted(length, nLine, line, " ".repeat(pos));
     }
 
-    boolean isString(Token lastToken, char start){
-        return (lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)start <= 127);
+    // CR: private static
+    // CR: replace with two separate methods, call them from getTokenType - isSeparator(Token token), isAscii(char c)
+    boolean isString(Token lastToken, char start) {
+        return lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)start <= 127;
     }
 
     private TokenType getTokenType(char c){
         Token lastToken = getLastToken();
-        //FIX CR: c <= 127, also move this check to separate method for clarity
         if (isString(lastToken, c)) {
             return TokenType.STRING;
         }
@@ -118,7 +118,7 @@ public class Lexer {
         try {
             return br.readLine();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -131,9 +131,9 @@ public class Lexer {
         String number = line.substring(start, i);
         try{
             value = Integer.parseInt(number);
+            // CR: why is it bad to have 0 as the first char?
             if ((value == 0 || number.charAt(0) == '0') && number.length() > 1) throw new NumberFormatException();
         }catch(NumberFormatException e){
-            //FIX CR: it is not an unknown char, it is another type of error
             if (!reporter.report(incorrectNumber(line, start, number))) {
                 return -1;
             }
@@ -147,10 +147,10 @@ public class Lexer {
     private int string(int i, String line, int length, int nLine){
         final String value;
         if (length != 0 && i + length <= line.length()) {
+            // CR: forgot to check that all the chars are ascii
             value = line.substring(i, i + length);
         }
         else {
-            //FIX CR: another type of error
             if (!reporter.report(incorrectStringLength(line, i, length))) {
                 return -1;
             }

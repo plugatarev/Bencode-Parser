@@ -137,6 +137,7 @@ public class ParserTest {
     }
 
     private static Element parse(List<Token> tokens) {
+        // CR: probably can even move this class to upper level
         ErrorReporter errorReporter = new ErrorReporter() {
             int i = 0;
             @Override

@@ -14,19 +14,19 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Main {
-    static private void closeHandles(BufferedReader r, BufferedWriter w) throws IOException {
+    private static void closeHandles(BufferedReader r, BufferedWriter w) throws IOException {
         r.close();
         w.close();
     }
 
     public static void main(String[] args) throws IOException {
-        //OK CR: we need to read from file, not from string
         if (args.length < 2){
             System.out.println("I/O files specified incorrectly or not specified\n");
             return;
         }
         Path input = Paths.get(args[0]).toAbsolutePath();
         Path output = Paths.get(args[1]).toAbsolutePath();
+        // CR: this file can be closed earlier
         BufferedReader br = new BufferedReader(new FileReader(input.toFile()));
         BufferedWriter bw = new BufferedWriter(new FileWriter(output.toFile()));
         ErrorReporter reporter = new FileReporter(bw);

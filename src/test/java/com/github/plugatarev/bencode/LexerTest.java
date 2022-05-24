@@ -17,6 +17,7 @@ import static org.hamcrest.CoreMatchers.is;
 public class LexerTest {
     private static List<TokenType> scan(String expressions) {
         BufferedReader br = new BufferedReader(new StringReader(expressions));
+        // CR: move to nested class
         ErrorReporter errorReporter = new ErrorReporter() {
             int i = 0;
             @Override
@@ -26,6 +27,7 @@ public class LexerTest {
             }
         };
         List<Token> tokens = Lexer.scan(br, errorReporter);
+        // CR: merge with scant
         return tokens == null ? null : tokens.stream().map(Token::tokenType).toList();
     }
 
@@ -111,7 +113,7 @@ public class LexerTest {
 
     @Test
     public void negativeNumber(){
-
+        // CR: just get list of tokens, validate and then map
         assertTypes(scan("i-2132e"),
                 TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
         List<Token> tokens = scant("i-213e");
@@ -136,6 +138,7 @@ public class LexerTest {
     //TODO: TEST: digit "000"
     @Test
     public void numberStartingFromZeros(){
+        // CR: why null?
         String digit = "i00323e";
         Assert.assertNull(scan(digit));
     }

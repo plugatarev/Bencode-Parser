@@ -14,6 +14,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
+// CR: also need to add JsonConverterTest
 public class IntegrationTest {
 
     ErrorReporter reporter = new ConsoleReporter();

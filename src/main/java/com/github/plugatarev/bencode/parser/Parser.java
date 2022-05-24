@@ -28,10 +28,10 @@ public class Parser {
         while (!matches(TokenType.EOF)) {
             try {
                 if (tokens.get(pos).tokenType() != TokenType.EOL) {
+                    // CR: what will happen for "i32e\ni42e"? seems that one integer will disappear
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
-                //FIX CR: why not ParserException?
             } catch (ParserException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
@@ -44,7 +44,6 @@ public class Parser {
 
     private Element parseElement() {
         TokenType type = tokens.get(pos).tokenType();
-        //FIX CR: seems redundant, please check - yes
         return switch (type) {
             case DICTIONARY -> parseDictionary();
             case LIST -> parseList();
@@ -66,11 +65,13 @@ public class Parser {
     }
 
     private Element.BDictionary parseDictionary() {
+        // CR: that's not how you should validate order.
+        // CR: you need to add all elements in map, preserve order and then check that an order is correct
+        // CR: or you can check ony last two elements, but on each insert, it's up to you
+        // CR: if the order is broken - show some kind of helpful message
         Map<Element.BString, Element> dict = new TreeMap<>(Comparator.comparing(Element.BString::str));
         advance();
         while (!matches(TokenType.END_TYPE)) {
-            //OK CR: add test that only string keys are valid
-            //OK CR: you need to assure that keys are in lexicographical order (see bencode spec)
             Element.BString key = parseString();
             Element value = parseElement();
             dict.put(key, value);
@@ -87,6 +88,7 @@ public class Parser {
     }
 
     private Element.BInteger parseInteger() {
+        // CR: consume(TokenType.INTEGER_BEGIN) ?
         advance();
         Token token = consume(TokenType.INTEGER);
         consume(TokenType.END_TYPE);
