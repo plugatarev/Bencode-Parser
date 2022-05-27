@@ -5,7 +5,6 @@ import com.github.plugatarev.bencode.lexer.Token;
 import com.github.plugatarev.bencode.lexer.TokenType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Parser {
     private final List<Token> tokens;
@@ -28,7 +27,9 @@ public class Parser {
         while (!matches(TokenType.EOF)) {
             try {
                 if (tokens.get(pos).tokenType() != TokenType.EOL) {
+                    //TODO
                     // CR: what will happen for "i32e\ni42e"? seems that one integer will disappear
+                    //it seems that agreed that the expression is only on the line
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
@@ -65,6 +66,7 @@ public class Parser {
     }
 
     private Element.BDictionary parseDictionary() {
+        //TODO
         // CR: that's not how you should validate order.
         // CR: you need to add all elements in map, preserve order and then check that an order is correct
         // CR: or you can check ony last two elements, but on each insert, it's up to you
@@ -88,8 +90,7 @@ public class Parser {
     }
 
     private Element.BInteger parseInteger() {
-        // CR: consume(TokenType.INTEGER_BEGIN) ?
-        advance();
+        consume(TokenType.INTEGER_BEGIN);
         Token token = consume(TokenType.INTEGER);
         consume(TokenType.END_TYPE);
         return new Element.BInteger((Integer) token.value());

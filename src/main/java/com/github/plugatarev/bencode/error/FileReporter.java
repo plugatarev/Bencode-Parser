@@ -28,6 +28,7 @@ public class FileReporter implements ErrorReporter, AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        // CR: close file here, use try catch with resources in main
+        //OK CR: close file here, use try catch with resources in main
+        bw.close();
     }
 }

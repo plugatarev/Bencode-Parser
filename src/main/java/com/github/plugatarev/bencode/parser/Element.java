@@ -12,9 +12,19 @@ public sealed interface Element {
         }
     }
 
-    record BList(List<Element> list) implements Element{}
+    record BList(List<Element> list) implements Element{
+        @Override
+        public String toString(){
+            return list.toString();
+        }
+    }
 
-    record BDictionary(Map<Element.BString, Element> dict) implements Element{}
+    record BDictionary(Map<Element.BString, Element> dict) implements Element{
+        @Override
+        public String toString(){
+            return dict.toString();
+        }
+    }
 
     record BString(String str) implements  Element{
         @Override

@@ -1,5 +1,6 @@
 package com.github.plugatarev.bencode;
 
+import com.github.plugatarev.bencode.error.TestReporter;
 import com.github.plugatarev.bencode.error.ErrorReporter;
 import com.github.plugatarev.bencode.lexer.Lexer;
 import com.github.plugatarev.bencode.lexer.Token;
@@ -15,32 +16,15 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 
 public class LexerTest {
+    private static final ErrorReporter errorReporter = new TestReporter();
+
     private static List<TokenType> scan(String expressions) {
-        BufferedReader br = new BufferedReader(new StringReader(expressions));
-        // CR: move to nested class
-        ErrorReporter errorReporter = new ErrorReporter() {
-            int i = 0;
-            @Override
-            public boolean report(String message) {
-                i++;
-                return i < 20;
-            }
-        };
-        List<Token> tokens = Lexer.scan(br, errorReporter);
-        // CR: merge with scant
+        List<Token> tokens = scant(expressions);
         return tokens == null ? null : tokens.stream().map(Token::tokenType).toList();
     }
 
     private static List<Token> scant(String expressions) {
         BufferedReader br = new BufferedReader(new StringReader(expressions));
-        ErrorReporter errorReporter = new ErrorReporter() {
-            int i = 0;
-            @Override
-            public boolean report(String message) {
-                i++;
-                return i < 20;
-            }
-        };
         return Lexer.scan(br, errorReporter);
     }
 
@@ -113,6 +97,7 @@ public class LexerTest {
 
     @Test
     public void negativeNumber(){
+        //TODO
         // CR: just get list of tokens, validate and then map
         assertTypes(scan("i-2132e"),
                 TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
@@ -135,10 +120,10 @@ public class LexerTest {
         assertTypes(scan("\n\n"), TokenType.EOL, TokenType.EOL, TokenType.EOF);
     }
 
-    //TODO: TEST: digit "000"
     @Test
     public void numberStartingFromZeros(){
-        // CR: why null?
+        //TODO
+        // CR: why null? - because number cannot begin from zero
         String digit = "i00323e";
         Assert.assertNull(scan(digit));
     }

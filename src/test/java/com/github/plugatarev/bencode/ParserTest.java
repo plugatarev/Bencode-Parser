@@ -1,5 +1,6 @@
 package com.github.plugatarev.bencode;
 
+import com.github.plugatarev.bencode.error.TestReporter;
 import com.github.plugatarev.bencode.error.ErrorReporter;
 import com.github.plugatarev.bencode.lexer.Token;
 import com.github.plugatarev.bencode.lexer.TokenType;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ParserTest {
+    private final static ErrorReporter errorReporter = new TestReporter();
     @Test
     public void empty() {
         Element elements = parse(tokens());
@@ -137,15 +139,6 @@ public class ParserTest {
     }
 
     private static Element parse(List<Token> tokens) {
-        // CR: probably can even move this class to upper level
-        ErrorReporter errorReporter = new ErrorReporter() {
-            int i = 0;
-            @Override
-            public boolean report(String message) {
-                i++;
-                return i < 20;
-            }
-        };
         return Parser.parse(tokens, errorReporter);
     }
 

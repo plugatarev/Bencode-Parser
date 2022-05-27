@@ -14,7 +14,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.List;
 
-// CR: also need to add JsonConverterTest
 public class IntegrationTest {
 
     ErrorReporter reporter = new ConsoleReporter();
@@ -39,7 +38,6 @@ public class IntegrationTest {
         String result = converter.json(bTokens);
         Assert.assertEquals(result, expected);
     }
-
 
     @Test
     public void string(){

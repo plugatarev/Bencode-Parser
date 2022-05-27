@@ -48,7 +48,7 @@ public class Lexer {
                     continue;
                 }
                 if (type == null) {
-                    String error = unknownChar(line, i, c);
+                    String error = getErrorMessage(ErrorType.UNKNOWN_CHAR, line, i, c);
                     if (!reporter.report(error)) {
                         return null;
                     }
@@ -64,40 +64,28 @@ public class Lexer {
         return hasErrors ? null : tokens;
     }
 
-    // CR: only difference is the first line, merge errors into one method
-    private String unknownChar(String line, int pos, char c) {
-        return """
-                Unknown char '%c' at line %d:
-                %s
-                %s^--- here
-                """.formatted(c, nLine, line, " ".repeat(pos));
+    //OK CR: only difference is the first line, merge errors into one method
+    private String getErrorMessage(ErrorType type, String line, int pos, Object obj) {
+        String errorMessage = null;
+        switch (type) {
+            case UNKNOWN_CHAR -> errorMessage = "Unknown char '%c' at line %d:\n%s\n%s^--- here\n";
+            case INCORRECT_NUMBER -> errorMessage = "Incorrect number %s at line %d:\n%s\n%s^--- here\n";
+            case INCORRECT_STRING_LENGTH -> errorMessage = "Expected string of length %d at line %d,\n%s\n%s^--- here\n";
+        }
+        return errorMessage.formatted(obj, nLine, line, " ".repeat(pos));
     }
 
-    private String incorrectNumber(String line, int pos, String number){
-        return """
-                Incorrect number %s at line %d:
-                %s
-                %s^--- here
-                """.formatted(number, nLine, line, " ".repeat(pos));
+    private static boolean isSeparator(Token token){
+        return token != null && token.tokenType() == TokenType.SEPARATOR;
     }
 
-    private String incorrectStringLength(String line, int pos, int length){
-        return """
-                Expected string of length %d at line %d,
-                %s
-                %s^--- here"""
-                .formatted(length, nLine, line, " ".repeat(pos));
-    }
-
-    // CR: private static
-    // CR: replace with two separate methods, call them from getTokenType - isSeparator(Token token), isAscii(char c)
-    boolean isString(Token lastToken, char start) {
-        return lastToken != null && lastToken.tokenType() == TokenType.SEPARATOR && (int)start <= 127;
+    private static boolean isAscii(char c){
+        return (int)c <= 127;
     }
 
     private TokenType getTokenType(char c){
         Token lastToken = getLastToken();
-        if (isString(lastToken, c)) {
+        if (isSeparator(lastToken) && isAscii(c)) {
             return TokenType.STRING;
         }
         return switch (c){
@@ -122,6 +110,13 @@ public class Lexer {
         }
     }
 
+    private int reportAndGetPosition(ErrorType type, String line, int startPos, Object value){
+        if (!reporter.report(getErrorMessage(type, line, startPos, value))) return -1;
+        hasErrors = true;
+        if (type == ErrorType.INCORRECT_STRING_LENGTH || type == ErrorType.UNKNOWN_CHAR) return startPos + (Integer) value;
+        return ((String) value).length();
+    }
+
     private int number(int i, String line, TokenType type) {
         int start = i;
         do {
@@ -131,32 +126,25 @@ public class Lexer {
         String number = line.substring(start, i);
         try{
             value = Integer.parseInt(number);
-            // CR: why is it bad to have 0 as the first char?
+            //TODO
+            //OK CR: why is it bad to have 0 as the first char?
+            // - "Leading zeros are not allowed" - bencode specification
             if ((value == 0 || number.charAt(0) == '0') && number.length() > 1) throw new NumberFormatException();
         }catch(NumberFormatException e){
-            if (!reporter.report(incorrectNumber(line, start, number))) {
-                return -1;
-            }
-            hasErrors = true;
-            return i;
+           return reportAndGetPosition(ErrorType.INCORRECT_NUMBER, line, i, number);
         }
         tokens.add(new Token(type, nLine, start, value));
         return i;
     }
 
     private int string(int i, String line, int length, int nLine){
-        final String value;
-        if (length != 0 && i + length <= line.length()) {
-            // CR: forgot to check that all the chars are ascii
-            value = line.substring(i, i + length);
+        if (length == 0 || i + length > line.length())
+            return reportAndGetPosition(ErrorType.INCORRECT_STRING_LENGTH, line, i, length);
+        for (int pos = i; pos < i + length; pos++){
+            if (!isAscii(line.charAt(pos))) return reportAndGetPosition(ErrorType.UNKNOWN_CHAR, line, i, length);
         }
-        else {
-            if (!reporter.report(incorrectStringLength(line, i, length))) {
-                return -1;
-            }
-            hasErrors = true;
-            return i + length;
-        }
+        //OK CR: forgot to check that all the chars are ascii
+        String value = line.substring(i, i + length);
         tokens.add(new Token(TokenType.STRING, nLine, i - length, value));
         return i + length;
     }
