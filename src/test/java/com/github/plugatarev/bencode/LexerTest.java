@@ -97,11 +97,9 @@ public class LexerTest {
 
     @Test
     public void negativeNumber(){
-        //TODO
-        // CR: just get list of tokens, validate and then map
-        assertTypes(scan("i-2132e"),
-                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
         List<Token> tokens = scant("i-213e");
+        assertTypes(tokens.stream().map(Token::tokenType).toList(),
+                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
         Assert.assertEquals(-213, tokens.get(1).value());
     }
 

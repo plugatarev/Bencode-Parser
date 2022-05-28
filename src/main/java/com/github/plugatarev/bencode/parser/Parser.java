@@ -29,7 +29,7 @@ public class Parser {
                 if (tokens.get(pos).tokenType() != TokenType.EOL) {
                     //TODO
                     // CR: what will happen for "i32e\ni42e"? seems that one integer will disappear
-                    //it seems that agreed that the expression is only on the line
+                    //it seems that agreed that the expression is only a line
                     element = parseElement();
                 }
                 consume(TokenType.EOL);
