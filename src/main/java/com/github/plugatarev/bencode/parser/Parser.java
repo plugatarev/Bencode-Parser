@@ -26,13 +26,7 @@ public class Parser {
         Element element = null;
         while (!matches(TokenType.EOF)) {
             try {
-                if (tokens.get(pos).tokenType() != TokenType.EOL) {
-                    //TODO
-                    // CR: what will happen for "i32e\ni42e"? seems that one integer will disappear
-                    //it seems that agreed that the expression is only a line
-                    element = parseElement();
-                }
-                consume(TokenType.EOL);
+                element = parseElement();
             } catch (ParserException e) {
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
@@ -65,20 +59,30 @@ public class Parser {
         return new Element.BList(values);
     }
 
+    private boolean isCorrectOrder(Map<Element.BString, Element> dict){
+        Iterator<Element.BString> iterator = dict.keySet().iterator();
+        Element.BString tmp = iterator.next();
+        while (iterator.hasNext()) {
+            if (iterator.next().str().compareTo(tmp.str()) < 0) return false;
+        }
+        return true;
+    }
+
     private Element.BDictionary parseDictionary() {
-        //TODO
+        //OK
         // CR: that's not how you should validate order.
         // CR: you need to add all elements in map, preserve order and then check that an order is correct
         // CR: or you can check ony last two elements, but on each insert, it's up to you
         // CR: if the order is broken - show some kind of helpful message
-        Map<Element.BString, Element> dict = new TreeMap<>(Comparator.comparing(Element.BString::str));
-        advance();
+        Map<Element.BString, Element> dict = new LinkedHashMap<>();
+        Token start = advance();
         while (!matches(TokenType.END_TYPE)) {
             Element.BString key = parseString();
             Element value = parseElement();
             dict.put(key, value);
         }
         advance();
+        if (!isCorrectOrder(dict)) throw new ParserException(lexicographicOrder(start));
         return new Element.BDictionary(dict);
     }
 
@@ -118,6 +122,17 @@ public class Parser {
             throw new ParserException(unexpectedToken(token, expected));
         }
         return token;
+    }
+
+    private static String lexicographicOrder(Token token){
+        int pos = token.pos();
+        String position = pos == -1 ?
+                "End of line " + token.nLine() :
+                "Line " + token.nLine() + ", position: " + ++pos;
+        return """
+                %s
+                The lexicographic order in the dictionary is broken
+                """.formatted(position);
     }
 
     private static String unexpectedToken(Token token, TokenType... expected) {

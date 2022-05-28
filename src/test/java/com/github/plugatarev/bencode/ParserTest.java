@@ -87,6 +87,26 @@ public class ParserTest {
     }
 
     @Test
+    public void dictionaryWithIncorrectLexicographicOrder(){
+        Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key"),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "generic"),
+                new TokenInfo(TokenType.STRING_BEGIN, "7"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "generic"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key"),
+                new TokenInfo(TokenType.END_TYPE, null))
+        );
+        Assert.assertNull(element);
+    }
+
+    @Test
     public void dictionaryKeyNotString(){
         Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
                 new TokenInfo(TokenType.INTEGER_BEGIN, "i"),
@@ -103,12 +123,12 @@ public class ParserTest {
     @Test
     public void dictionaryWithoutEndSymbol(){
         Element element = parse(tokens(new TokenInfo(TokenType.DICTIONARY, "d"),
-                new TokenInfo(TokenType.STRING_BEGIN, "3"),
-                new TokenInfo(TokenType.SEPARATOR, ":"),
-                new TokenInfo(TokenType.STRING, "key"),
                 new TokenInfo(TokenType.STRING_BEGIN, "7"),
                 new TokenInfo(TokenType.SEPARATOR, ":"),
-                new TokenInfo(TokenType.STRING, "generic")
+                new TokenInfo(TokenType.STRING, "generic"),
+                new TokenInfo(TokenType.STRING_BEGIN, "3"),
+                new TokenInfo(TokenType.SEPARATOR, ":"),
+                new TokenInfo(TokenType.STRING, "key")
         ));
         Assert.assertNull(element);
     }
@@ -133,7 +153,6 @@ public class ParserTest {
         for (TokenInfo tokenInfo : tokenInfos) {
             tokens.add(new Token(tokenInfo.type, -1, -1, tokenInfo.value));
         }
-        tokens.add(new Token(TokenType.EOL, -1, -1, null));
         tokens.add(new Token(TokenType.EOF, -1, -1, null));
         return tokens;
     }

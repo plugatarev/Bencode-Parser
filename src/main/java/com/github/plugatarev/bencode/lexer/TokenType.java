@@ -9,6 +9,5 @@ public enum TokenType {
     INTEGER,
     END_TYPE,
     SEPARATOR,
-    EOL,
     EOF
 }

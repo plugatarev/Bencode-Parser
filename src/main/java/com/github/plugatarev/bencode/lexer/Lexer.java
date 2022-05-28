@@ -10,7 +10,7 @@ import java.util.List;
 public class Lexer {
     private final BufferedReader br;
     private final List<Token> tokens = new ArrayList<>();
-    private int nLine;
+    private final int nLine = 1;
     private final ErrorReporter reporter;
     private boolean hasErrors = false;
 
@@ -26,39 +26,39 @@ public class Lexer {
 
     private List<Token> scan() {
         String line;
+        if ((line = getLine()) == null || line.isBlank()) {
+            tokens.add(new Token(TokenType.EOF, nLine, -1, nLine));
+            return tokens;
+        }
         int lastNumber = 0;
-        while ((line = getLine()) != null) {
-            nLine++;
-            int i = 0;
-            while (i < line.length()) {
-                char c = line.charAt(i);
-                TokenType type = getTokenType(c);
-                if (type == TokenType.INTEGER_BEGIN) {
-                    tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
-                    if ((i = number(++i, line, TokenType.INTEGER)) == -1) return null;
-                    continue;
-                }
-                if (type == TokenType.STRING) {
-                    if ((i = string(i, line, lastNumber, nLine)) == -1) return null;
-                    continue;
-                }
-                if (isDigit(c)){
-                    if ((i = number(i, line, TokenType.STRING_BEGIN)) == -1) return null;
-                    lastNumber = getLastToken() == null ? 0 : (Integer)getLastToken().value();
-                    continue;
-                }
-                if (type == null) {
-                    String error = getErrorMessage(ErrorType.UNKNOWN_CHAR, line, i, c);
-                    if (!reporter.report(error)) {
-                        return null;
-                    }
-                    hasErrors = true;
-                } else {
-                    tokens.add(new Token(type, nLine, i, c));
-                }
-                i++;
+        int i = 0;
+        while (i < line.length()) {
+            char c = line.charAt(i);
+            TokenType type = getTokenType(c);
+            if (type == TokenType.INTEGER_BEGIN) {
+                tokens.add(new Token(TokenType.INTEGER_BEGIN, nLine, i, 'i'));
+                if ((i = number(++i, line, TokenType.INTEGER)) == -1) return null;
+                continue;
             }
-            tokens.add(new Token(TokenType.EOL, nLine, -1, nLine));
+            if (type == TokenType.STRING) {
+                if ((i = string(i, line, lastNumber)) == -1) return null;
+                continue;
+            }
+            if (isDigit(c)){
+                if ((i = number(i, line, TokenType.STRING_BEGIN)) == -1) return null;
+                lastNumber = getLastToken() == null ? 0 : (Integer)getLastToken().value();
+                continue;
+            }
+            if (type == null) {
+                String error = getErrorMessage(ErrorType.UNKNOWN_CHAR, line, i, c);
+                if (!reporter.report(error)) {
+                    return null;
+                }
+                hasErrors = true;
+            } else {
+                tokens.add(new Token(type, nLine, i, c));
+            }
+            i++;
         }
         tokens.add(new Token(TokenType.EOF, nLine, -1, nLine));
         return hasErrors ? null : tokens;
@@ -71,6 +71,7 @@ public class Lexer {
             case UNKNOWN_CHAR -> errorMessage = "Unknown char '%c' at line %d:\n%s\n%s^--- here\n";
             case INCORRECT_NUMBER -> errorMessage = "Incorrect number %s at line %d:\n%s\n%s^--- here\n";
             case INCORRECT_STRING_LENGTH -> errorMessage = "Expected string of length %d at line %d,\n%s\n%s^--- here\n";
+            case NUMBER_WITH_DEAD_ZEROS -> errorMessage = "Number %s cannot have leading zeros at line %d:\n%s\n%s^--- here\n";
         }
         return errorMessage.formatted(obj, nLine, line, " ".repeat(pos));
     }
@@ -125,19 +126,20 @@ public class Lexer {
         int value;
         String number = line.substring(start, i);
         try{
+            if (number.length() > 1 && (number.charAt(0) == '0' || number.charAt(0) == '-' && number.charAt(1) == '0'))
+                throw new NumberFormatException("zeros");
             value = Integer.parseInt(number);
-            //TODO
-            //OK CR: why is it bad to have 0 as the first char?
-            // - "Leading zeros are not allowed" - bencode specification
-            if ((value == 0 || number.charAt(0) == '0') && number.length() > 1) throw new NumberFormatException();
         }catch(NumberFormatException e){
-           return reportAndGetPosition(ErrorType.INCORRECT_NUMBER, line, i, number);
+           ErrorType errorType;
+           if (e.getMessage().equals("zeros")) errorType = ErrorType.NUMBER_WITH_DEAD_ZEROS;
+           else errorType = ErrorType.INCORRECT_NUMBER;
+           return reportAndGetPosition(errorType, line, start, number);
         }
         tokens.add(new Token(type, nLine, start, value));
         return i;
     }
 
-    private int string(int i, String line, int length, int nLine){
+    private int string(int i, String line, int length){
         if (length == 0 || i + length > line.length())
             return reportAndGetPosition(ErrorType.INCORRECT_STRING_LENGTH, line, i, length);
         for (int pos = i; pos < i + length; pos++){
@@ -145,7 +147,7 @@ public class Lexer {
         }
         //OK CR: forgot to check that all the chars are ascii
         String value = line.substring(i, i + length);
-        tokens.add(new Token(TokenType.STRING, nLine, i - length, value));
+        tokens.add(new Token(TokenType.STRING, 1, i - length, value));
         return i + length;
     }
 

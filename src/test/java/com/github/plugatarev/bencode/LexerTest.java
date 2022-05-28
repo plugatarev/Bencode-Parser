@@ -49,7 +49,7 @@ public class LexerTest {
                 TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
                 TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
                 TokenType.STRING_BEGIN,  TokenType.SEPARATOR, TokenType.STRING,
-                TokenType.END_TYPE, TokenType.EOL, TokenType.EOF
+                TokenType.END_TYPE, TokenType.EOF
                 );
     }
 
@@ -61,7 +61,7 @@ public class LexerTest {
     @Test
     public void string(){
         assertTypes(scan("5:12d$@"),
-                TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.STRING, TokenType.EOL, TokenType.EOF);
+                TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.STRING, TokenType.EOF);
     }
 
     @Test
@@ -92,14 +92,14 @@ public class LexerTest {
     @Test
     public void number(){
         assertTypes(scan("i432e"),
-                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
+                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOF);
     }
 
     @Test
     public void negativeNumber(){
         List<Token> tokens = scant("i-213e");
         assertTypes(tokens.stream().map(Token::tokenType).toList(),
-                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOL, TokenType.EOF);
+                TokenType.INTEGER_BEGIN, TokenType.INTEGER, TokenType.END_TYPE, TokenType.EOF);
         Assert.assertEquals(-213, tokens.get(1).value());
     }
 
@@ -114,14 +114,12 @@ public class LexerTest {
     }
 
     @Test
-    public void eol() {
-        assertTypes(scan("\n\n"), TokenType.EOL, TokenType.EOL, TokenType.EOF);
+    public void lineOfSpaces() {
+        assertTypes(scan("        "), TokenType.EOF);
     }
 
     @Test
     public void numberStartingFromZeros(){
-        //TODO
-        // CR: why null? - because number cannot begin from zero
         String digit = "i00323e";
         Assert.assertNull(scan(digit));
     }
@@ -135,6 +133,6 @@ public class LexerTest {
     @Test
     public void zeroLength(){
         String s = "0:";
-        assertTypes(scan(s), TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.EOL, TokenType.EOF);
+        assertTypes(scan(s), TokenType.STRING_BEGIN, TokenType.SEPARATOR, TokenType.EOF);
     }
 }
