@@ -50,11 +50,7 @@ public class Lexer {
                 continue;
             }
             if (type == null) {
-                String error = getErrorMessage(ErrorType.UNKNOWN_CHAR, line, i, c);
-                if (!reporter.report(error)) {
-                    return null;
-                }
-                hasErrors = true;
+                if (reportAndGetPosition(ErrorType.UNKNOWN_CHAR, line, i, c) == -1) return null;
             } else {
                 tokens.add(new Token(type, nLine, i, c));
             }
@@ -114,7 +110,8 @@ public class Lexer {
     private int reportAndGetPosition(ErrorType type, String line, int startPos, Object value){
         if (!reporter.report(getErrorMessage(type, line, startPos, value))) return -1;
         hasErrors = true;
-        if (type == ErrorType.INCORRECT_STRING_LENGTH || type == ErrorType.UNKNOWN_CHAR) return startPos + (Integer) value;
+        if (type == ErrorType.UNKNOWN_CHAR) return ++startPos;
+        if (type == ErrorType.INCORRECT_STRING_LENGTH) return startPos + (Integer) value;
         return ((String) value).length();
     }
 
