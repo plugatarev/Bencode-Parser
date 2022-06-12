@@ -14,4 +14,9 @@ public class ConsoleReporter implements ErrorReporter {
         }
         return true;
     }
+
+    @Override
+    public boolean hasError(){
+        return nMessages > 0;
+    }
 }
