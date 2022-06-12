@@ -12,7 +12,6 @@ public class Lexer {
     private final List<Token> tokens = new ArrayList<>();
     private final int nLine = 1;
     private final ErrorReporter reporter;
-    private boolean hasErrors = false;
 
     private Lexer(BufferedReader br, ErrorReporter reporter) {
         this.br = br;
@@ -50,26 +49,14 @@ public class Lexer {
                 continue;
             }
             if (type == null) {
-                if (reportAndGetPosition(ErrorType.UNKNOWN_CHAR, line, i, c) == -1) return null;
+                if (!reporter.report(LexerError.UNKNOWN_CHAR.getErrorMessage(line, i, c))) return null;
             } else {
                 tokens.add(new Token(type, nLine, i, c));
             }
             i++;
         }
         tokens.add(new Token(TokenType.EOF, nLine, -1, nLine));
-        return hasErrors ? null : tokens;
-    }
-
-    //OK CR: only difference is the first line, merge errors into one method
-    private String getErrorMessage(ErrorType type, String line, int pos, Object obj) {
-        String errorMessage = null;
-        switch (type) {
-            case UNKNOWN_CHAR -> errorMessage = "Unknown char '%c' at line %d:\n%s\n%s^--- here\n";
-            case INCORRECT_NUMBER -> errorMessage = "Incorrect number %s at line %d:\n%s\n%s^--- here\n";
-            case INCORRECT_STRING_LENGTH -> errorMessage = "Expected string of length %d at line %d,\n%s\n%s^--- here\n";
-            case NUMBER_WITH_DEAD_ZEROS -> errorMessage = "Number %s cannot have leading zeros at line %d:\n%s\n%s^--- here\n";
-        }
-        return errorMessage.formatted(obj, nLine, line, " ".repeat(pos));
+        return reporter.hasError() ? null : tokens;
     }
 
     private static boolean isSeparator(Token token){
@@ -107,14 +94,6 @@ public class Lexer {
         }
     }
 
-    private int reportAndGetPosition(ErrorType type, String line, int startPos, Object value){
-        if (!reporter.report(getErrorMessage(type, line, startPos, value))) return -1;
-        hasErrors = true;
-        if (type == ErrorType.UNKNOWN_CHAR) return ++startPos;
-        if (type == ErrorType.INCORRECT_STRING_LENGTH) return startPos + (Integer) value;
-        return ((String) value).length();
-    }
-
     private int number(int i, String line, TokenType type) {
         int start = i;
         do {
@@ -127,22 +106,27 @@ public class Lexer {
                 throw new NumberFormatException("zeros");
             value = Integer.parseInt(number);
         }catch(NumberFormatException e){
-           ErrorType errorType;
-           if (e.getMessage().equals("zeros")) errorType = ErrorType.NUMBER_WITH_DEAD_ZEROS;
-           else errorType = ErrorType.INCORRECT_NUMBER;
-           return reportAndGetPosition(errorType, line, start, number);
+           LexerError error;
+           if (e.getMessage().equals("zeros")) error = LexerError.NUMBER_WITH_DEAD_ZEROS;
+           else error = LexerError.INCORRECT_NUMBER;
+           if (!reporter.report(error.getErrorMessage(line, start, number))) return -1;
+           return number.length();
         }
         tokens.add(new Token(type, nLine, start, value));
         return i;
     }
 
     private int string(int i, String line, int length){
-        if (length == 0 || i + length > line.length())
-            return reportAndGetPosition(ErrorType.INCORRECT_STRING_LENGTH, line, i, length);
-        for (int pos = i; pos < i + length; pos++){
-            if (!isAscii(line.charAt(pos))) return reportAndGetPosition(ErrorType.UNKNOWN_CHAR, line, i, length);
+        if (length == 0 || i + length > line.length()){
+            if (!reporter.report(LexerError.INCORRECT_STRING_LENGTH.getErrorMessage(line, i, length))) return -1;
+            return length == 0 ? -1 : i + length;
         }
-        //OK CR: forgot to check that all the chars are ascii
+        for (int pos = i; pos < i + length; pos++){
+            if (!isAscii(line.charAt(pos))){
+                if (!reporter.report(LexerError.UNKNOWN_CHAR.getErrorMessage(line, i, length))) return -1;
+                return ++i;
+            }
+        }
         String value = line.substring(i, i + length);
         tokens.add(new Token(TokenType.STRING, 1, i - length, value));
         return i + length;
