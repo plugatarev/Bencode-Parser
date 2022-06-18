@@ -1,7 +1,5 @@
 package com.github.plugatarev.bencode;
 
-import com.github.plugatarev.bencode.error.TestReporter;
-import com.github.plugatarev.bencode.error.ErrorReporter;
 import com.github.plugatarev.bencode.lexer.Token;
 import com.github.plugatarev.bencode.lexer.TokenType;
 import com.github.plugatarev.bencode.parser.Element;

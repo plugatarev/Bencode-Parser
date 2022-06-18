@@ -27,7 +27,6 @@ public class Parser {
             try {
                 element = parseElement();
             } catch (ParserException e) {
-                //OK CR: use ErrorReporter#hasError instead
                 if (!errorReporter.report(e.getMessage())) {
                     return null;
                 }
@@ -59,7 +58,6 @@ public class Parser {
     }
 
     public static boolean isCorrectOrder(Map<Element.BString, Element> dict){
-        //OK CR: what if there're 0 elements in dict? better use regular for and null as first element
         Element.BString prev = null;
         for (Element.BString key : dict.keySet()){
             if (prev != null){

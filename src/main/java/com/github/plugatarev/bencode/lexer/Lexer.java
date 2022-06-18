@@ -102,21 +102,24 @@ public class Lexer {
         } while (i < line.length() && Character.isDigit(line.charAt(i)));
         int value;
         String number = line.substring(start, i);
+        if (startsWithZeros(number)){
+            String deadZeroesError = LexerError.NUMBER_WITH_DEAD_ZEROS.message(line, start, number);
+            if (!reporter.report(deadZeroesError)) return -1;
+            return number.length();
+        }
         try{
-            if (number.length() > 1 && (number.charAt(0) == '0' || number.charAt(0) == '-' && number.charAt(1) == '0')){
-                String deadZeroesError = LexerError.NUMBER_WITH_DEAD_ZEROS.message(line, start, number);
-                if (!reporter.report(deadZeroesError)) return -1;
-                return number.length();
-            }
             value = Integer.parseInt(number);
         }catch(NumberFormatException e){
-           //OK CR: seems that it is easier to handle error just inside if, no need to construct new object and throw it
             String incorrectNumberError = LexerError.INCORRECT_NUMBER.message(line, start, number);
             if (!reporter.report(incorrectNumberError)) return -1;
            return number.length();
         }
         tokens.add(new Token(type, nLine, start, value));
         return i;
+    }
+
+    private boolean startsWithZeros(String number) {
+        return number.length() > 1 && (number.charAt(0) == '0' || number.charAt(0) == '-' && number.charAt(1) == '0');
     }
 
     private int string(int i, String line, int length){
@@ -127,14 +130,12 @@ public class Lexer {
         }
         for (int pos = i; pos < i + length; pos++){
             if (!isAscii(line.charAt(pos))){
-                //OK CR: pos instead of i?
                 String unknownCharError = LexerError.UNKNOWN_CHAR.message(line, pos, length);
                 if (!reporter.report(unknownCharError)) return -1;
                 return ++i;
             }
         }
         String value = line.substring(i, i + length);
-        //OK CR: nLine instead of 1?
         tokens.add(new Token(TokenType.STRING, nLine, i - length, value));
         return i + length;
     }

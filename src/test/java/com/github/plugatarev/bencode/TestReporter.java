@@ -1,6 +1,8 @@
-package com.github.plugatarev.bencode.error;
+package com.github.plugatarev.bencode;
 
-public class TestReporter implements ErrorReporter{
+import com.github.plugatarev.bencode.error.ErrorReporter;
+
+public class TestReporter implements ErrorReporter {
     private int nMessages = 0;
 
     @Override
