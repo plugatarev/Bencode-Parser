@@ -28,6 +28,7 @@ public class Parser {
             try {
                 element = parseElement();
             } catch (ParserException e) {
+                // CR: use ErrorReporter#hasError instead
                 hasErrors = true;
                 if (!errorReporter.report(e.getMessage())) {
                     return null;
@@ -61,6 +62,7 @@ public class Parser {
 
     private boolean isCorrectOrder(Map<Element.BString, Element> dict){
         Iterator<Element.BString> iterator = dict.keySet().iterator();
+        // CR: what if there're 0 elements in dict? better use regular for and null as first element
         Element.BString tmp = iterator.next();
         while (iterator.hasNext()) {
             if (iterator.next().str().compareTo(tmp.str()) < 0) return false;
@@ -69,11 +71,6 @@ public class Parser {
     }
 
     private Element.BDictionary parseDictionary() {
-        //OK
-        // CR: that's not how you should validate order.
-        // CR: you need to add all elements in map, preserve order and then check that an order is correct
-        // CR: or you can check ony last two elements, but on each insert, it's up to you
-        // CR: if the order is broken - show some kind of helpful message
         Map<Element.BString, Element> dict = new LinkedHashMap<>();
         Token start = advance();
         while (!matches(TokenType.END_TYPE)) {

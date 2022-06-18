@@ -12,7 +12,7 @@ public enum LexerError {
         this.errorMessage = errorMessage;
     }
 
-    public String getErrorMessage(String line, int pos, Object obj) {
+    public String message(String line, int pos, Object obj) {
         return errorMessage.formatted(obj, 1, pos, line, " ".repeat(pos));
     }
 }

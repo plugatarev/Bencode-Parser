@@ -14,7 +14,7 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) throws Exception {
         if (args.length < 2){
-            System.out.println("I/O files specified incorrectly or not specified\n");
+            System.err.println("I/O files specified incorrectly or not specified\n");
             return;
         }
         Path input = Paths.get(args[0]).toAbsolutePath();
