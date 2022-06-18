@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 public class ParserTest {
-    private final static ErrorReporter errorReporter = new TestReporter();
+    private final static TestReporter errorReporter = new TestReporter();
     @Test
     public void empty() {
         Element elements = parse(tokens());
         Assert.assertNull(elements);
+        errorReporter.clear();
     }
 
     @Test
@@ -67,6 +68,7 @@ public class ParserTest {
                 new TokenInfo(TokenType.STRING, "generic")
         ));
         Assert.assertNull(element);
+        errorReporter.clear();
     }
 
     @Test
@@ -104,6 +106,7 @@ public class ParserTest {
                 new TokenInfo(TokenType.END_TYPE, null))
         );
         Assert.assertNull(element);
+        errorReporter.clear();
     }
 
     @Test
@@ -118,6 +121,7 @@ public class ParserTest {
                 new TokenInfo(TokenType.END_TYPE, null))
         );
         Assert.assertNull(element);
+        errorReporter.clear();
     }
 
     @Test
@@ -131,6 +135,7 @@ public class ParserTest {
                 new TokenInfo(TokenType.STRING, "key")
         ));
         Assert.assertNull(element);
+        errorReporter.clear();
     }
 
     @Test
@@ -141,6 +146,7 @@ public class ParserTest {
                 new TokenInfo(TokenType.STRING, "key")
         ));
         Assert.assertNull(element);
+        errorReporter.clear();
     }
 
     private List<Token> createIntegerNumber(int value){

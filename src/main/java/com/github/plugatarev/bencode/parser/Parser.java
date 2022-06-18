@@ -22,20 +22,18 @@ public class Parser {
     }
 
     private Element parse() {
-        boolean hasErrors = false;
         Element element = null;
         while (!matches(TokenType.EOF)) {
             try {
                 element = parseElement();
             } catch (ParserException e) {
-                // CR: use ErrorReporter#hasError instead
-                hasErrors = true;
+                //OK CR: use ErrorReporter#hasError instead
                 if (!errorReporter.report(e.getMessage())) {
                     return null;
                 }
             }
         }
-        return hasErrors ? null : element;
+        return errorReporter.hasError() ? null : element;
     }
 
     private Element parseElement() {
@@ -60,12 +58,14 @@ public class Parser {
         return new Element.BList(values);
     }
 
-    private boolean isCorrectOrder(Map<Element.BString, Element> dict){
-        Iterator<Element.BString> iterator = dict.keySet().iterator();
-        // CR: what if there're 0 elements in dict? better use regular for and null as first element
-        Element.BString tmp = iterator.next();
-        while (iterator.hasNext()) {
-            if (iterator.next().str().compareTo(tmp.str()) < 0) return false;
+    public static boolean isCorrectOrder(Map<Element.BString, Element> dict){
+        //OK CR: what if there're 0 elements in dict? better use regular for and null as first element
+        Element.BString prev = null;
+        for (Element.BString key : dict.keySet()){
+            if (prev != null){
+                if (key.str().compareTo(prev.str()) < 0) return false;
+            }
+            prev = key;
         }
         return true;
     }

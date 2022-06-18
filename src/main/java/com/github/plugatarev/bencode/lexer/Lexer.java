@@ -103,15 +103,16 @@ public class Lexer {
         int value;
         String number = line.substring(start, i);
         try{
-            if (number.length() > 1 && (number.charAt(0) == '0' || number.charAt(0) == '-' && number.charAt(1) == '0'))
-                throw new NumberFormatException("zeros");
+            if (number.length() > 1 && (number.charAt(0) == '0' || number.charAt(0) == '-' && number.charAt(1) == '0')){
+                String deadZeroesError = LexerError.NUMBER_WITH_DEAD_ZEROS.message(line, start, number);
+                if (!reporter.report(deadZeroesError)) return -1;
+                return number.length();
+            }
             value = Integer.parseInt(number);
         }catch(NumberFormatException e){
-           LexerError error;
-           // CR: seems that it is easier to handle error just inside if, no need to construct new object and throw it
-           if (e.getMessage().equals("zeros")) error = LexerError.NUMBER_WITH_DEAD_ZEROS;
-           else error = LexerError.INCORRECT_NUMBER;
-           if (!reporter.report(error.message(line, start, number))) return -1;
+           //OK CR: seems that it is easier to handle error just inside if, no need to construct new object and throw it
+            String incorrectNumberError = LexerError.INCORRECT_NUMBER.message(line, start, number);
+            if (!reporter.report(incorrectNumberError)) return -1;
            return number.length();
         }
         tokens.add(new Token(type, nLine, start, value));
@@ -120,19 +121,21 @@ public class Lexer {
 
     private int string(int i, String line, int length){
         if (length == 0 || i + length > line.length()){
-            if (!reporter.report(LexerError.INCORRECT_STRING_LENGTH.message(line, i, length))) return -1;
+            String incorrectLength = LexerError.INCORRECT_STRING_LENGTH.message(line, i, length);
+            if (!reporter.report(incorrectLength)) return -1;
             return length == 0 ? -1 : i + length;
         }
         for (int pos = i; pos < i + length; pos++){
             if (!isAscii(line.charAt(pos))){
-                // CR: pos instead of i?
-                if (!reporter.report(LexerError.UNKNOWN_CHAR.message(line, i, length))) return -1;
+                //OK CR: pos instead of i?
+                String unknownCharError = LexerError.UNKNOWN_CHAR.message(line, pos, length);
+                if (!reporter.report(unknownCharError)) return -1;
                 return ++i;
             }
         }
         String value = line.substring(i, i + length);
-        // CR: nLine instead of 1?
-        tokens.add(new Token(TokenType.STRING, 1, i - length, value));
+        //OK CR: nLine instead of 1?
+        tokens.add(new Token(TokenType.STRING, nLine, i - length, value));
         return i + length;
     }
 
